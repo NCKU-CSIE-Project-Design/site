@@ -17,7 +17,7 @@ app = FastAPI()
 # 設置CORS
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000"],  # React 開發服務器的地址
+    allow_origins=["http://140.116.154.66:3001"],  # React 開發服務器的地址
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -83,4 +83,16 @@ async def get_images():
                 "filename": filename,
                 "url": f"/uploads/{filename}"
             })
-    return images 
+    return images
+
+if __name__ == "__main__":
+    import uvicorn
+    try:
+        uvicorn.run(
+            "main:app",
+            host="0.0.0.0",
+            port=8001,
+            reload=True
+        )
+    except Exception as e:
+        print(f"啟動失敗: {e}")

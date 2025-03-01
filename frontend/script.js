@@ -65,7 +65,7 @@ document.addEventListener('DOMContentLoaded', () => {
         formData.append('image', fileInput.files[0]);
 
         try {
-            const response = await fetch('http://localhost:8001/analyze', {
+            const response = await fetch('http://140.116.154.66:8001/analyze', {
                 method: 'POST',
                 body: formData
             });
