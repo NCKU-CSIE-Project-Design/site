@@ -1,13 +1,15 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { 
   Container, 
   Box, 
   Typography, 
   Button, 
   CircularProgress,
-  Paper
+  Paper,
+  Stack
 } from '@mui/material';
 import CloudUploadIcon from '@mui/icons-material/CloudUpload';
+import CameraAltIcon from '@mui/icons-material/CameraAlt';
 import { styled } from '@mui/material/styles';
 import './App.css';
 
@@ -36,11 +38,83 @@ const PreviewImage = styled('img')({
   objectFit: 'contain',
 });
 
+const CameraPreview = styled('video')({
+  maxWidth: '100%',
+  maxHeight: '100%',
+  objectFit: 'contain',
+  display: 'none',
+});
+
+const CameraCanvas = styled('canvas')({
+  display: 'none',
+});
+
 function App() {
   const [selectedFile, setSelectedFile] = useState(null);
   const [preview, setPreview] = useState('');
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState('');
+  const [isCameraActive, setIsCameraActive] = useState(false);
+  
+  const videoRef = useRef(null);
+  const canvasRef = useRef(null);
+  const streamRef = useRef(null);
+
+  const startCamera = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ 
+        video: { facingMode: 'user' } 
+      });
+      streamRef.current = stream;
+      if (videoRef.current) {
+        videoRef.current.srcObject = stream;
+        videoRef.current.style.display = 'block';
+        videoRef.current.play();
+        setIsCameraActive(true);
+        setPreview('');
+      }
+    } catch (err) {
+      console.error('Error accessing camera:', err);
+      alert('無法存取相機，請確認已授予相機權限。');
+    }
+  };
+
+  const stopCamera = () => {
+    if (streamRef.current) {
+      streamRef.current.getTracks().forEach(track => track.stop());
+      if (videoRef.current) {
+        videoRef.current.style.display = 'none';
+      }
+      setIsCameraActive(false);
+    }
+  };
+
+  const takePhoto = () => {
+    if (videoRef.current && canvasRef.current) {
+      const video = videoRef.current;
+      const canvas = canvasRef.current;
+      
+      // 設置 canvas 大小與視訊相同
+      canvas.width = video.videoWidth;
+      canvas.height = video.videoHeight;
+      
+      // 在 canvas 上繪製當前視訊幀
+      const context = canvas.getContext('2d');
+      context.drawImage(video, 0, 0, canvas.width, canvas.height);
+      
+      // 將 canvas 內容轉換為圖片
+      const photoUrl = canvas.toDataURL('image/jpeg');
+      setPreview(photoUrl);
+      
+      // 將 base64 圖片轉換為 File 對象
+      canvas.toBlob((blob) => {
+        const file = new File([blob], "photo.jpg", { type: "image/jpeg" });
+        setSelectedFile(file);
+      }, 'image/jpeg');
+      
+      stopCamera();
+    }
+  };
 
   const handleFileSelect = (event) => {
     const file = event.target.files[0];
@@ -101,7 +175,7 @@ function App() {
           韓式個人色彩分析
         </Typography>
         <Typography variant="h6" color="text.secondary" paragraph>
-          上傳您的照片，讓AI為您打造專屬的色彩建議
+          上傳您的照片或拍攝照片，讓AI為您打造專屬的色彩建議
         </Typography>
       </Box>
 
@@ -110,14 +184,20 @@ function App() {
           <UploadBox
             onDrop={handleDrop}
             onDragOver={(e) => e.preventDefault()}
-            onClick={() => document.getElementById('file-input').click()}
+            onClick={() => !isCameraActive && document.getElementById('file-input').click()}
           >
             {preview ? (
               <PreviewImage src={preview} alt="預覽圖" />
             ) : (
               <>
-                <CloudUploadIcon sx={{ fontSize: 60, color: '#f8b195', mb: 2 }} />
-                <Typography>點擊或拖曳照片至此處</Typography>
+                <CameraPreview ref={videoRef} />
+                <CameraCanvas ref={canvasRef} />
+                {!isCameraActive && (
+                  <>
+                    <CloudUploadIcon sx={{ fontSize: 60, color: '#f8b195', mb: 2 }} />
+                    <Typography>點擊或拖曳照片至此處</Typography>
+                  </>
+                )}
               </>
             )}
             <HiddenInput
@@ -127,15 +207,36 @@ function App() {
               onChange={handleFileSelect}
             />
           </UploadBox>
-          <Button
-            variant="contained"
-            fullWidth
-            sx={{ mt: 2 }}
-            disabled={!selectedFile || loading}
-            onClick={handleAnalyze}
-          >
-            開始分析
-          </Button>
+          
+          <Stack direction="row" spacing={2} sx={{ mt: 2 }}>
+            {!isCameraActive ? (
+              <Button
+                variant="contained"
+                fullWidth
+                startIcon={<CameraAltIcon />}
+                onClick={startCamera}
+              >
+                開啟相機
+              </Button>
+            ) : (
+              <Button
+                variant="contained"
+                fullWidth
+                color="secondary"
+                onClick={takePhoto}
+              >
+                拍照
+              </Button>
+            )}
+            <Button
+              variant="contained"
+              fullWidth
+              disabled={!selectedFile || loading}
+              onClick={handleAnalyze}
+            >
+              開始分析
+            </Button>
+          </Stack>
         </Box>
 
         <Paper sx={{ p: 3, height: '100%' }}>
@@ -152,7 +253,7 @@ function App() {
           ) : (
             <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%' }}>
               <Typography color="text.secondary">
-                上傳照片後的分析結果將顯示在此處
+                上傳照片或拍攝照片後的分析結果將顯示在此處
               </Typography>
             </Box>
           )}
