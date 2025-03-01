@@ -62,6 +62,10 @@ function App() {
 
   const startCamera = async () => {
     try {
+      // 清除之前的預覽圖片和選擇的文件
+      setPreview('');
+      setSelectedFile(null);
+      
       const stream = await navigator.mediaDevices.getUserMedia({ 
         video: { facingMode: 'user' } 
       });
@@ -71,7 +75,6 @@ function App() {
         videoRef.current.style.display = 'block';
         videoRef.current.play();
         setIsCameraActive(true);
-        setPreview('');
       }
     } catch (err) {
       console.error('Error accessing camera:', err);
