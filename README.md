@@ -23,5 +23,5 @@ npm run build
 ### Backend
 
 ```bash
-uvicorn main:app --reload --port 8001
+python3 main.py
 ```
