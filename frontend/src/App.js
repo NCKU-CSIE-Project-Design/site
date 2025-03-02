@@ -122,60 +122,50 @@ function App() {
 
   const startCamera = async () => {
     try {
-      // 清除之前的預覽圖片和選擇的文件
-      setPreview('');
-      setSelectedFile(null);
-      
       const stream = await navigator.mediaDevices.getUserMedia({ 
         video: { facingMode: 'user' } 
       });
-      streamRef.current = stream;
-      if (videoRef.current) {
-        videoRef.current.srcObject = stream;
-        videoRef.current.style.display = 'block';
-        videoRef.current.play();
-        setIsCameraActive(true);
-      }
-    } catch (err) {
-      console.error('Error accessing camera:', err);
-      alert('無法存取相機，請確認已授予相機權限。');
+      setIsCameraActive(true);  // 先設置相機狀態為開啟
+      
+      // 使用 setTimeout 確保 video 元素已經渲染
+      setTimeout(() => {
+        if (videoRef.current) {
+          videoRef.current.srcObject = stream;
+          videoRef.current.play();
+        }
+      }, 100);
+      
+    } catch (error) {
+      console.error('無法開啟相機:', error);
+      setError('無法開啟相機，請確認已授予相機權限');
     }
   };
 
   const stopCamera = () => {
-    if (streamRef.current) {
-      streamRef.current.getTracks().forEach(track => track.stop());
-      if (videoRef.current) {
-        videoRef.current.style.display = 'none';
-      }
-      setIsCameraActive(false);
+    if (videoRef.current && videoRef.current.srcObject) {
+      const tracks = videoRef.current.srcObject.getTracks();
+      tracks.forEach(track => track.stop());
     }
+    setIsCameraActive(false);
   };
 
   const takePhoto = () => {
-    if (videoRef.current && canvasRef.current) {
-      const video = videoRef.current;
-      const canvas = canvasRef.current;
+    if (videoRef.current) {
+      const canvas = document.createElement('canvas');
+      canvas.width = videoRef.current.videoWidth;
+      canvas.height = videoRef.current.videoHeight;
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(videoRef.current, 0, 0);
+      const dataUrl = canvas.toDataURL('image/jpeg');
+      setPreview(dataUrl);
       
-      // 設置 canvas 大小與視訊相同
-      canvas.width = video.videoWidth;
-      canvas.height = video.videoHeight;
-      
-      // 在 canvas 上繪製當前視訊幀
-      const context = canvas.getContext('2d');
-      context.drawImage(video, 0, 0, canvas.width, canvas.height);
-      
-      // 將 canvas 內容轉換為圖片
-      const photoUrl = canvas.toDataURL('image/jpeg');
-      setPreview(photoUrl);
-      
-      // 將 base64 圖片轉換為 File 對象
-      canvas.toBlob((blob) => {
-        const file = new File([blob], "photo.jpg", { type: "image/jpeg" });
-        setSelectedFile(file);
-      }, 'image/jpeg');
-      
-      stopCamera();
+      // 將 base64 轉換為 File 對象
+      fetch(dataUrl)
+        .then(res => res.blob())
+        .then(blob => {
+          const file = new File([blob], "camera-photo.jpg", { type: "image/jpeg" });
+          setSelectedFile(file);
+        });
     }
   };
 
@@ -274,6 +264,16 @@ function App() {
   };
 
   const resetUpload = () => {
+    // 如果相機開啟中，先關閉相機
+    if (isCameraActive) {
+      if (videoRef.current && videoRef.current.srcObject) {
+        const tracks = videoRef.current.srcObject.getTracks();
+        tracks.forEach(track => track.stop());
+      }
+      setIsCameraActive(false);
+    }
+    
+    // 重置所有狀態
     setPreview('');
     setSelectedFile(null);
     setResult('');
@@ -304,8 +304,18 @@ function App() {
               <PreviewImage src={preview} alt="預覽圖" />
             ) : (
               <>
-                <CameraPreview ref={videoRef} />
-                <CameraCanvas ref={canvasRef} />
+                {isCameraActive && (
+                  <Box sx={{ width: '100%', display: 'flex', justifyContent: 'center', mb: 2 }}>
+                    <video
+                      ref={videoRef}
+                      style={{
+                        maxWidth: '100%',
+                        height: 'auto',
+                        borderRadius: '8px'
+                      }}
+                    />
+                  </Box>
+                )}
                 {!isCameraActive && (
                   <>
                     <CloudUploadIcon sx={{ fontSize: 60, color: '#f8b195', mb: 2 }} />
@@ -323,35 +333,45 @@ function App() {
           </UploadBox>
           
           <Stack direction="row" spacing={2} sx={{ mt: 2 }}>
+            {preview && (
+              <Button
+                variant="outlined"
+                fullWidth
+                onClick={resetUpload}
+              >
+                重新上傳
+              </Button>
+            )}
             {!isCameraActive ? (
-              <>
-                {preview && (
-                  <Button
-                    variant="outlined"
-                    fullWidth
-                    onClick={resetUpload}
-                  >
-                    重新上傳
-                  </Button>
-                )}
-                <Button
-                  variant="contained"
-                  fullWidth
-                  startIcon={<CameraAltIcon />}
-                  onClick={startCamera}
-                >
-                  開啟相機
-                </Button>
-              </>
-            ) : (
               <Button
                 variant="contained"
                 fullWidth
-                color="secondary"
-                onClick={takePhoto}
+                startIcon={<CameraAltIcon />}
+                onClick={startCamera}
               >
-                拍照
+                開啟相機
               </Button>
+            ) : (
+              !preview && (
+                <>
+                  <Button
+                    variant="contained"
+                    fullWidth
+                    color="secondary"
+                    onClick={takePhoto}
+                  >
+                    拍照
+                  </Button>
+                  <Button
+                    variant="outlined"
+                    fullWidth
+                    color="error"
+                    onClick={stopCamera}
+                  >
+                    關閉相機
+                  </Button>
+                </>
+              )
             )}
             <Button
               variant="contained"
