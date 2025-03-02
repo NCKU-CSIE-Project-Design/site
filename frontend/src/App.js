@@ -10,6 +10,7 @@ import {
 } from '@mui/material';
 import CloudUploadIcon from '@mui/icons-material/CloudUpload';
 import CameraAltIcon from '@mui/icons-material/CameraAlt';
+import ColorizeIcon from '@mui/icons-material/Colorize';
 import { styled } from '@mui/material/styles';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
@@ -93,6 +94,15 @@ const ColorDisplay = styled(Box)(({ theme }) => ({
     marginRight: theme.spacing(2),
     border: '1px solid #ddd',
     borderRadius: theme.spacing(1),
+    position: 'relative',
+  },
+  '& .color-picker-button': {
+    position: 'absolute',
+    right: -20,
+    top: '50%',
+    transform: 'translateY(-50%)',
+    minWidth: 'auto',
+    padding: 4,
   },
 }));
 
@@ -104,6 +114,7 @@ function App() {
   const [isCameraActive, setIsCameraActive] = useState(false);
   const [error, setError] = useState('');
   const [colors, setColors] = useState(null);
+  const [customColors, setCustomColors] = useState(null);
   
   const videoRef = useRef(null);
   const canvasRef = useRef(null);
@@ -228,6 +239,49 @@ function App() {
     }
   };
 
+  const handleColorChange = async (part, newColor) => {
+    const updatedColors = {
+      ...(customColors || colors),
+      [part]: newColor
+    };
+    setCustomColors(updatedColors);
+    
+    // 使用新的顏色重新分析
+    setLoading(true);
+    try {
+      const response = await fetch('http://140.116.154.66:8001/analyze_colors', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          colors: updatedColors
+        }),
+      });
+
+      const data = await response.json();
+      if (data.error) {
+        setError(data.error);
+      } else {
+        setResult(data.analysis);
+      }
+    } catch (error) {
+      console.error('Error:', error);
+      setError('網路連線錯誤，請稍後再試！');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const resetUpload = () => {
+    setPreview('');
+    setSelectedFile(null);
+    setResult('');
+    setError('');
+    setColors(null);
+    setCustomColors(null);
+  };
+
   return (
     <Container maxWidth="lg">
       <Box sx={{ my: 4, textAlign: 'center' }}>
@@ -270,14 +324,25 @@ function App() {
           
           <Stack direction="row" spacing={2} sx={{ mt: 2 }}>
             {!isCameraActive ? (
-              <Button
-                variant="contained"
-                fullWidth
-                startIcon={<CameraAltIcon />}
-                onClick={startCamera}
-              >
-                開啟相機
-              </Button>
+              <>
+                {preview && (
+                  <Button
+                    variant="outlined"
+                    fullWidth
+                    onClick={resetUpload}
+                  >
+                    重新上傳
+                  </Button>
+                )}
+                <Button
+                  variant="contained"
+                  fullWidth
+                  startIcon={<CameraAltIcon />}
+                  onClick={startCamera}
+                >
+                  開啟相機
+                </Button>
+              </>
             ) : (
               <Button
                 variant="contained"
@@ -328,18 +393,28 @@ function App() {
               {colors && (
                 <Box sx={{ mb: 3, p: 2, bgcolor: 'grey.50', borderRadius: 1 }}>
                   <Typography variant="h6" gutterBottom>偵測到的顏色：</Typography>
-                  <ColorDisplay>
-                    <Box className="color-box" sx={{ bgcolor: colors.頭髮 }} />
-                    <Typography>頭髮顏色：{colors.頭髮}</Typography>
-                  </ColorDisplay>
-                  <ColorDisplay>
-                    <Box className="color-box" sx={{ bgcolor: colors.膚色 }} />
-                    <Typography>膚色：{colors.膚色}</Typography>
-                  </ColorDisplay>
-                  <ColorDisplay>
-                    <Box className="color-box" sx={{ bgcolor: colors.嘴唇 }} />
-                    <Typography>唇色：{colors.嘴唇}</Typography>
-                  </ColorDisplay>
+                  {['頭髮', '膚色', '嘴唇'].map((part) => (
+                    <ColorDisplay key={part}>
+                      <Box className="color-box" sx={{ bgcolor: (customColors || colors)[part] }}>
+                        <Button
+                          className="color-picker-button"
+                          size="small"
+                          onClick={() => {
+                            const input = document.createElement('input');
+                            input.type = 'color';
+                            input.value = (customColors || colors)[part];
+                            input.addEventListener('change', (e) => {
+                              handleColorChange(part, e.target.value);
+                            });
+                            input.click();
+                          }}
+                        >
+                          <ColorizeIcon fontSize="small" />
+                        </Button>
+                      </Box>
+                      <Typography>{part}：{(customColors || colors)[part]}</Typography>
+                    </ColorDisplay>
+                  ))}
                 </Box>
               )}
 
