@@ -11,6 +11,8 @@ import {
 import CloudUploadIcon from '@mui/icons-material/CloudUpload';
 import CameraAltIcon from '@mui/icons-material/CameraAlt';
 import { styled } from '@mui/material/styles';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 import './App.css';
 
 const UploadBox = styled(Paper)(({ theme }) => ({
@@ -49,12 +51,59 @@ const CameraCanvas = styled('canvas')({
   display: 'none',
 });
 
+// 新增 Markdown 樣式組件
+const MarkdownContainer = styled(Box)(({ theme }) => ({
+  '& p': {
+    marginBottom: theme.spacing(2),
+  },
+  '& h1, h2, h3, h4, h5, h6': {
+    marginBottom: theme.spacing(2),
+    marginTop: theme.spacing(3),
+    color: theme.palette.primary.main,
+  },
+  '& ul, ol': {
+    marginBottom: theme.spacing(2),
+    paddingLeft: theme.spacing(3),
+  },
+  '& li': {
+    marginBottom: theme.spacing(1),
+  },
+  '& code': {
+    backgroundColor: theme.palette.grey[100],
+    padding: theme.spacing(0.5, 1),
+    borderRadius: theme.spacing(0.5),
+    fontSize: '0.9em',
+  },
+  '& blockquote': {
+    borderLeft: `4px solid ${theme.palette.primary.main}`,
+    margin: theme.spacing(2, 0),
+    padding: theme.spacing(1, 2),
+    backgroundColor: theme.palette.grey[50],
+  },
+}));
+
+// 添加顏色顯示組件
+const ColorDisplay = styled(Box)(({ theme }) => ({
+  display: 'flex',
+  alignItems: 'center',
+  marginBottom: theme.spacing(2),
+  '& .color-box': {
+    width: 40,
+    height: 40,
+    marginRight: theme.spacing(2),
+    border: '1px solid #ddd',
+    borderRadius: theme.spacing(1),
+  },
+}));
+
 function App() {
   const [selectedFile, setSelectedFile] = useState(null);
   const [preview, setPreview] = useState('');
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState('');
   const [isCameraActive, setIsCameraActive] = useState(false);
+  const [error, setError] = useState('');
+  const [colors, setColors] = useState(null);
   
   const videoRef = useRef(null);
   const canvasRef = useRef(null);
@@ -151,6 +200,8 @@ function App() {
 
     setLoading(true);
     setResult('');
+    setError('');
+    setColors(null);
 
     const formData = new FormData();
     formData.append('image', selectedFile);
@@ -162,10 +213,16 @@ function App() {
       });
 
       const data = await response.json();
-      setResult(data.analysis);
+      
+      if (data.error) {
+        setError(data.error);
+      } else {
+        setResult(data.analysis);
+        setColors(data.colors); // 儲存顏色資訊
+      }
     } catch (error) {
       console.error('Error:', error);
-      alert('分析過程中發生錯誤，請稍後再試！');
+      setError('網路連線錯誤，請稍後再試！');
     } finally {
       setLoading(false);
     }
@@ -248,10 +305,49 @@ function App() {
               <CircularProgress />
               <Typography sx={{ mt: 2 }}>分析中，請稍候...</Typography>
             </Box>
+          ) : error ? (
+            <Box sx={{ 
+              display: 'flex', 
+              flexDirection: 'column', 
+              alignItems: 'center', 
+              mt: 8,
+              color: 'error.main' 
+            }}>
+              <Typography variant="h6" gutterBottom>
+                錯誤提示
+              </Typography>
+              <Typography>
+                {error}
+              </Typography>
+            </Box>
           ) : result ? (
             <>
               <Typography variant="h5" gutterBottom>分析結果</Typography>
-              <Typography sx={{ whiteSpace: 'pre-line' }}>{result}</Typography>
+              
+              {/* 添加顏色顯示區域 */}
+              {colors && (
+                <Box sx={{ mb: 3, p: 2, bgcolor: 'grey.50', borderRadius: 1 }}>
+                  <Typography variant="h6" gutterBottom>偵測到的顏色：</Typography>
+                  <ColorDisplay>
+                    <Box className="color-box" sx={{ bgcolor: colors.頭髮 }} />
+                    <Typography>頭髮顏色：{colors.頭髮}</Typography>
+                  </ColorDisplay>
+                  <ColorDisplay>
+                    <Box className="color-box" sx={{ bgcolor: colors.膚色 }} />
+                    <Typography>膚色：{colors.膚色}</Typography>
+                  </ColorDisplay>
+                  <ColorDisplay>
+                    <Box className="color-box" sx={{ bgcolor: colors.嘴唇 }} />
+                    <Typography>唇色：{colors.嘴唇}</Typography>
+                  </ColorDisplay>
+                </Box>
+              )}
+
+              <MarkdownContainer>
+                <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                  {result}
+                </ReactMarkdown>
+              </MarkdownContainer>
             </>
           ) : (
             <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%' }}>
