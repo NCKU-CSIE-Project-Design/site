@@ -6,9 +6,6 @@ A web application for analyzing personal colors using AI.
 
 ### Frontend (3001 port)
 ```bash
-# Create react app
-npx create-react-app frontend
-
 # Install dependencies
 cd frontend
 npm install
@@ -16,12 +13,11 @@ npm install
 # Start development server
 npm start
 
-# Build for production
-npm run build
 ```
 
 ### Backend
 
 ```bash
+cd backend
 python3 main.py
 ```
