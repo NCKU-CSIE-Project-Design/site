@@ -41,16 +41,7 @@ const PreviewImage = styled('img')({
   objectFit: 'contain',
 });
 
-const CameraPreview = styled('video')({
-  maxWidth: '100%',
-  maxHeight: '100%',
-  objectFit: 'contain',
-  display: 'none',
-});
 
-const CameraCanvas = styled('canvas')({
-  display: 'none',
-});
 
 // 新增 Markdown 樣式組件
 const MarkdownContainer = styled(Box)(({ theme }) => ({
@@ -117,8 +108,6 @@ function App() {
   const [customColors, setCustomColors] = useState(null);
   
   const videoRef = useRef(null);
-  const canvasRef = useRef(null);
-  const streamRef = useRef(null);
 
   const startCamera = async () => {
     try {
@@ -208,7 +197,7 @@ function App() {
     formData.append('image', selectedFile);
 
     try {
-      const response = await fetch('http://140.116.154.66:8001/analyze', {
+      const response = await fetch(`https://api.coloranalysis.fun/analyze`, {
         method: 'POST',
         body: formData,
       });
@@ -239,7 +228,7 @@ function App() {
     // 使用新的顏色重新分析
     setLoading(true);
     try {
-      const response = await fetch('http://140.116.154.66:8001/analyze_colors', {
+      const response = await fetch(`https://api.coloranalysis.fun/analyze_colors`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

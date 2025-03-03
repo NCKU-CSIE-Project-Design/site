@@ -21,7 +21,7 @@ app = FastAPI()
 # 設置CORS
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://140.116.154.66:3001"],  # React 開發服務器的地址
+    allow_origins=["*"],  # React 開發服務器的地址
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -295,7 +295,7 @@ if __name__ == "__main__":
         uvicorn.run(
             "main:app",
             host="0.0.0.0",
-            port=8001,
+            port=8081,
             reload=True
         )
     except Exception as e:

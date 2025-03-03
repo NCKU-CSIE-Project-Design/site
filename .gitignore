@@ -1,6 +1,4 @@
 */__pycache__/*
 */node_modules/*
-*/package-lock.json
-backend/uploads/*
-!backend/uploads/.gitkeep
-backend/.env
+*/uploads/*
+*/.env
