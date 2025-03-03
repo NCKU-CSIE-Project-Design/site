@@ -4,7 +4,7 @@ A web application for analyzing personal colors using AI.
 
 ## Setup Instructions
 
-### Frontend (3001 port)
+### Frontend (8080 port)
 ```bash
 # Install dependencies
 cd frontend
@@ -15,7 +15,7 @@ npm start
 
 ```
 
-### Backend
+### Backend (8081 port)
 
 ```bash
 cd backend
