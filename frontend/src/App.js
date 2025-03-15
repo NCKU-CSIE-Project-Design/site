@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import {
     Container,
     Box,
@@ -106,6 +106,7 @@ function App() {
     const [error, setError] = useState('');
     const [colors, setColors] = useState(null);
     const [customColors, setCustomColors] = useState(null);
+    const [colorsChanged, setColorsChanged] = useState(false);
 
     const videoRef = useRef(null);
 
@@ -219,13 +220,23 @@ function App() {
         }
     };
 
-    const handleColorChange = async (part, newColor) => {
-        const updatedColors = {
-            ...(customColors || colors),
+    const handleColorChange = (part, newColor) => {
+        setCustomColors(prevColors => ({
+            ...prevColors,
             [part]: newColor
-        };
-        setCustomColors(updatedColors);
+        }));
+        setColorsChanged(true); // 確保 colorsChanged 設為 true
+    };
+    
+    // 使用 useEffect 監聽 customColors，確保顯示 "重新分析" 按鈕
+    useEffect(() => {
+        if (customColors) {
+            setColorsChanged(true);
+        }
+    }, [customColors]);
+    
 
+    const handleReanalyze = async () => {
         if (!selectedFile) {
             setError('找不到圖片檔案');
             return;
@@ -233,7 +244,7 @@ function App() {
         
         const formData = new FormData();
         formData.append('image', selectedFile);
-        formData.append('colors', JSON.stringify(updatedColors));
+        formData.append('colors', JSON.stringify(customColors));
         
         setLoading(true);
         try {
@@ -253,6 +264,7 @@ function App() {
             setError('網路連線錯誤，請稍後再試！');
         } finally {
             setLoading(false);
+            setColorsChanged(false);
         }
     };
 
@@ -416,9 +428,18 @@ function App() {
                                                         const input = document.createElement('input');
                                                         input.type = 'color';
                                                         input.value = (customColors || colors)[part];
-                                                        input.addEventListener('change', (e) => {
+                                                        
+                                                        // 使用 oninput 來即時更新顏色顯示
+                                                        input.oninput = (e) => {
                                                             handleColorChange(part, e.target.value);
+                                                        };
+                                                        
+                                                        // 防止觸發其他事件
+                                                        input.addEventListener('change', (e) => {
+                                                            e.preventDefault();
+                                                            e.stopPropagation();
                                                         });
+                                                        
                                                         input.click();
                                                     }}
                                                 >
@@ -428,6 +449,17 @@ function App() {
                                             <Typography>{part}：{(customColors || colors)[part]}</Typography>
                                         </ColorDisplay>
                                     ))}
+                                    {/* 只在顏色被修改後顯示重新分析按鈕 */}
+                                    {colorsChanged && (
+                                        <Button
+                                            variant="contained"
+                                            fullWidth
+                                            onClick={handleReanalyze}
+                                            sx={{ mt: 2 }}
+                                        >
+                                            重新分析
+                                        </Button>
+                                    )}
                                 </Box>
                             )}
 
@@ -449,5 +481,4 @@ function App() {
         </Container>
     );
 }
-
 export default App; 
