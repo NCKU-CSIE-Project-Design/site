@@ -219,14 +219,19 @@ function App() {
             setLoading(false);
         }
     };
-
     const handleColorChange = (part, newColor) => {
-        setCustomColors(prevColors => ({
-            ...prevColors,
-            [part]: newColor
-        }));
-        setColorsChanged(true); // 確保 colorsChanged 設為 true
+        setCustomColors(prevColors => {
+            // 如果 prevColors 为空，则使用原始的 colors 作为基础
+            const baseColors = prevColors || colors;
+            // 创建一个新对象，保留所有现有颜色，只更新指定部位的颜色
+            return {
+                ...baseColors,
+                [part]: newColor
+            };
+        });
+        setColorsChanged(true);
     };
+    
     
     // 使用 useEffect 監聽 customColors，確保顯示 "重新分析" 按鈕
     useEffect(() => {
