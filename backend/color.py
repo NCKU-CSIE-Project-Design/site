@@ -27,8 +27,8 @@ def get_hair_color(img, face):
     hair_top = max(0, face_top - hair_height)
     hair_region = img[hair_top:face_top, face.left():face.right()]
     hsv_hair = cv2.cvtColor(hair_region, cv2.COLOR_RGB2HSV)
-    lower_hair = np.array([0, 0, 0])
-    upper_hair = np.array([180, 255, 100])
+    lower_hair = np.array([0, 20, 50])   
+    upper_hair = np.array([180, 255, 255])
     mask = cv2.inRange(hsv_hair, lower_hair, upper_hair)
     dominant_color = get_dominant_color(hair_region, mask)
     return rgb_to_hex(dominant_color)

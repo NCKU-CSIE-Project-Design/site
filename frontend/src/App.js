@@ -161,6 +161,7 @@ function App() {
 
     const handleFileSelect = (event) => {
         const file = event.target.files[0];
+        event.target.value = '';
         if (file && file.type.startsWith('image/')) {
             setSelectedFile(file);
             const reader = new FileReader();
