@@ -149,7 +149,6 @@ function App() {
             const dataUrl = canvas.toDataURL('image/jpeg');
             setPreview(dataUrl);
 
-            // 將 base64 轉換為 File 對象
             fetch(dataUrl)
                 .then(res => res.blob())
                 .then(blob => {
