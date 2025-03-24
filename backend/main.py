@@ -9,7 +9,8 @@ from dotenv import load_dotenv
 from color import get_color
 from typing import Optional
 import json
-
+import requests
+import base64
 
 # 載入環境變數
 load_dotenv()
@@ -26,7 +27,7 @@ app.add_middleware(
 )
 
 # 創建圖片儲存目錄
-UPLOAD_DIR = "Uploads"
+UPLOAD_DIR = "ImgBackup/Uploads"
 if not os.path.exists(UPLOAD_DIR):
     os.makedirs(UPLOAD_DIR)
 
@@ -52,6 +53,9 @@ async def analyze_image(
     try:
         contents = await image.read()
         filepath = save_image(contents)
+        
+        # Convert uploaded image to base64
+        face = base64.b64encode(contents).decode()
 
         img_pil = PIL.Image.open(io.BytesIO(contents))
         
@@ -85,13 +89,15 @@ async def analyze_image(
         
         # 根據分析結果生成穿搭照片的提示詞
         outfit_prompt = f"""
-        Based on the following image analysis (the image is a close-up portrait), create a prompt for an image generation model to generate a full-body outfit photo suitable for the individual's face shape and skin tone. The style should reflect that of an Asian university student, with a simple background. The prompt should include details about:
-        1. Hat, clothing, pants, shoes, earrings, gestures, and necklace
-        2. Overall outfit style and color scheme
-        3. Lighting that enhances the outfit and complements the individual's features
-        4. A simple and clean background setting
+        Based on the following image analysis (the image is a close-up portrait), create a prompt for Stable Diffusion to generate a full-body outfit photo. Use only keywords and short phrases, separated by commas. Include:
+        1. Main subject: "1girl, asian, university student, {response.text}"
+        2. Outfit details: "casual wear, street fashion, korean style"
+        3. Accessories: "hat, earrings, necklace"
+        4. Pose and expression: "standing pose, natural smile"
+        5. Lighting and background: "natural lighting, soft lighting, simple background, white background"
+        6. Quality and style: "high quality, detailed, 8k uhd, masterpiece, best quality"
         
-        Ensure the prompt is detailed and specific, optimized for image generation models.
+        Format the prompt as a single line of comma-separated keywords, optimized for Stable Diffusion.
         """
         
         outfit_response = model.generate_content([outfit_prompt, img_pil])
@@ -99,10 +105,13 @@ async def analyze_image(
         print(outfit_response.text)
         print("===========================\n")
 
+        outfit_image = await generate_image(outfit_response.text)
+        outfit_image_change_face = await change_face(outfit_image, face)
         # 返回分析結果和圖片URL
         return {
             "analysis": response.text,
-            "colors": colors
+            "colors": colors,
+            "image": outfit_image_change_face
         }
 
     except Exception as e:
@@ -121,3 +130,78 @@ if __name__ == "__main__":
         )
     except Exception as e:
         print(f"啟動失敗: {e}")
+
+
+
+
+async def generate_image(prompt):
+    try:
+        WEBUI_URL = "http://140.116.154.71:7860/sdapi/v1/txt2img" 
+        payload = {
+            "prompt": prompt,
+            "negative_prompt": "(normal quality), (low quality), (worst quality), bad-hands-5,  Deep_Negative",
+            "seed": -1,
+            "sampler_name": "DPM++ SDE",
+            "scheduler": "Karras",
+            "batch_size": 1,
+            "n_iter": 1,
+            "steps": 20,
+            "cfg_scale": 7,
+            "width": 512,
+            "height": 768,
+            "send_images": "true",
+            "save_images": "false",
+            "clip_skip": 2,
+            "override_settings": {
+                "sd_model_checkpoint": "ChilloutRealistic"
+            }
+        }
+        response = requests.post(WEBUI_URL, json=payload, headers={'Content-Type': 'application/json'})
+        if response.status_code != 200:
+            return {"error": f"WebUI 請求失敗，狀態碼: {response.status_code}", "details": response.text}
+        data = response.json()
+        img_data = data["images"][0]
+        decoded_img_data = base64.b64decode(img_data)
+        
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        output_path = f"ImgBackup/GenImg/output_{timestamp}.png"
+        with open(output_path, "wb") as f:
+            f.write(decoded_img_data)
+        print("img saved", output_path)
+        return img_data
+    except Exception as e:
+        return {"error": f"請求或解碼時發生錯誤: {str(e)}"}
+
+
+async def change_face(image, face):
+    try:
+        WEBUI_URL = "http://140.116.154.71:7860/roop/image" 
+        payload = {
+            "source_image": face,
+            "target_image": image,
+            "face_index": [
+                0
+            ],
+            "scale": 1,
+            "upscale_visibility": 1,
+            "face_restorer": "None",
+            "restorer_visibility": 1,
+            "model": "inswapper_128.onnx"
+        }
+        response = requests.post(WEBUI_URL, json=payload, headers={'Content-Type': 'application/json'})
+        if response.status_code != 200:
+            return {"error": f"WebUI 請求失敗，狀態碼: {response.status_code}", "details": response.text}
+        data = response.json()
+        
+        img_data = data["image"]
+        decoded_img_data = base64.b64decode(img_data)
+        
+        # Add timestamp to filename
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        output_path = f"ImgBackup/GenImg/output_changed_face_{timestamp}.png"
+        with open(output_path, "wb") as f:
+            f.write(decoded_img_data)
+        print("img saved", output_path)
+        return img_data
+    except Exception as e:
+        return {"error": f"請求或解碼時發生錯誤: {str(e)}"}

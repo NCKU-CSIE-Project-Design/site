@@ -107,6 +107,7 @@ function App() {
     const [colors, setColors] = useState(null);
     const [customColors, setCustomColors] = useState(null);
     const [colorsChanged, setColorsChanged] = useState(false);
+    const [outfitImage, setOutfitImage] = useState(null);
 
     const videoRef = useRef(null);
 
@@ -193,6 +194,7 @@ function App() {
         setResult('');
         setError('');
         setColors(null);
+        setOutfitImage(null);
 
         const formData = new FormData();
         formData.append('image', selectedFile);
@@ -201,7 +203,6 @@ function App() {
             const response = await fetch(`https://api.coloranalysis.fun/analyze`, {
                 method: 'POST',
                 body: formData
-
             });
 
             const data = await response.json();
@@ -210,7 +211,8 @@ function App() {
                 setError(data.error);
             } else {
                 setResult(data.analysis);
-                setColors(data.colors); // 儲存顏色資訊
+                setColors(data.colors);
+                setOutfitImage(data.image); // Store the base64 image data
             }
         } catch (error) {
             console.error('Error:', error);
@@ -290,6 +292,7 @@ function App() {
         setError('');
         setColors(null);
         setCustomColors(null);
+        setOutfitImage(null);  // 清除推薦穿搭圖片
     };
 
     return (
@@ -342,6 +345,9 @@ function App() {
                         />
                     </UploadBox>
 
+                    {/* Move outfit image display here */}
+                    
+
                     <Stack direction="row" spacing={2} sx={{ mt: 2 }}>
                         {preview && (
                             <Button
@@ -392,6 +398,32 @@ function App() {
                             開始分析
                         </Button>
                     </Stack>
+                    {outfitImage && (
+                        <Box sx={{ mt: 4, textAlign: 'center' }}>
+                            <Typography variant="h6" gutterBottom>
+                                推薦穿搭
+                            </Typography>
+                            <Paper 
+                                elevation={3} 
+                                sx={{ 
+                                    p: 2, 
+                                    display: 'inline-block',
+                                    maxWidth: '100%',
+                                    borderRadius: 2
+                                }}
+                            >
+                                <img 
+                                    src={`data:image/png;base64,${outfitImage}`}
+                                    alt="推薦穿搭"
+                                    style={{
+                                        maxWidth: '100%',
+                                        height: 'auto',
+                                        borderRadius: '8px'
+                                    }}
+                                />
+                            </Paper>
+                        </Box>
+                    )}
                 </Box>
 
                 <Paper sx={{ p: 3, height: '100%' }}>

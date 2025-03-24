@@ -1,6 +1,5 @@
 */__pycache__/*
 */node_modules/*
-*/Uploads/*
-*/Colors/*
+*/ImgBackup/*
 */.env
 cloudflared.deb

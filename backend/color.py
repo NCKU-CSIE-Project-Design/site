@@ -5,7 +5,7 @@ import dlib
 import os
 from datetime import datetime
 
-COLOR_DIR = "Colors"
+COLOR_DIR = "ImgBackup/Colors"
 
 def get_dominant_color(img, mask=None):
     if mask is not None:
