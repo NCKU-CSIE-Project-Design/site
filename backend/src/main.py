@@ -37,7 +37,6 @@ def save_image(contents):
     with open(filepath, "wb") as f:
         f.write(contents)
 
-    print(f"圖片已保存到: {filepath}")
     return filepath
 
 @app.post("/analyze")
@@ -57,16 +56,12 @@ async def analyze_image(
         else:
             colors = get_color(filepath)
             if colors.get("error"):
-                return {
-                    "error": colors.get("error")
-                }
+                return { "error": colors.get("error") }
 
         
         analysis_result = get_analysis_result(colors, img_pil)
-        
         outfit_prompt = get_outfit_prompt(analysis_result, img_pil)
         outfit_image = await generate_image(outfit_prompt, face)
-
 
         return {
             "analysis": analysis_result,

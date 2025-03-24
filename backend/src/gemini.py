@@ -33,13 +33,12 @@ def get_gender(img_pil):
 def get_outfit_prompt(analysis_result, img_pil):
     outfit_prompt = f"""
     Based on the following image analysis (the image is a close-up portrait), create a prompt for Stable Diffusion to generate a full-body outfit photo. Use only keywords and short phrases, separated by commas. Include:
-    1. Main subject: "asian, university student, {analysis_result}"
+    1. Main subject: "{get_gender(img_pil)}, asian, university student, {analysis_result}"
     2. Outfit details: "casual wear, street fashion, korean style"
     3. Accessories: "hat, earrings, necklace"
     4. Pose and expression: "standing pose, natural smile"
     5. Lighting and background: "natural lighting, soft lighting, simple background, white background"
     6. Quality and style: "high quality, detailed, 8k uhd, masterpiece, best quality"
-    7. Gender: {get_gender(img_pil)}
 
     Format the prompt as a single line of comma-separated keywords, optimized for S｀table Diffusion.
     """

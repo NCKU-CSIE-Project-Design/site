@@ -1,7 +1,7 @@
 import requests
 import base64
 from datetime import datetime
-
+import json
 GenImg_DIR = "ImgBackup/GenImg"
 
 
@@ -13,7 +13,6 @@ async def generate_image(prompt, face):
 async def prompt_to_image(prompt):
     try:
         URL = "http://140.116.154.71:7860/sdapi/v1/txt2img"
-        print(prompt)
         payload = {
             "prompt": prompt,
             "negative_prompt": "(normal quality), (low quality), (worst quality), bad-hands-5,  Deep_Negative",
@@ -65,6 +64,10 @@ async def change_face(image, face):
             "restorer_visibility": 1,
             "model": "inswapper_128.onnx"
         }
+
+        with open("payload.json", "w", encoding="utf-8") as f:
+            json.dump(payload, f, ensure_ascii=False, indent=4)
+
         response = requests.post(URL, json=payload, headers={'Content-Type': 'application/json'})
         if response.status_code != 200:
             return {"error": f"WebUI 請求失敗，狀態碼: {response.status_code}", "details": response.text}
@@ -81,7 +84,4 @@ async def change_face(image, face):
         return image
     except Exception as e:
         return {"error": f"請求或解碼時發生錯誤: {str(e)}"}
-    
-
-
     

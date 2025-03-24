@@ -252,7 +252,7 @@ function App() {
         const formData = new FormData();
         formData.append('image', selectedFile);
         formData.append('colors', JSON.stringify(customColors));
-        
+        setOutfitImage(null);
         setLoading(true);
         try {
             const response = await fetch(`https://api.coloranalysis.fun/analyze`, {
