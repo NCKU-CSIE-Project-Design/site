@@ -1,5 +1,5 @@
-*/__pycache__/*
-*/node_modules/*
-*/ImgBackup/*
-*/.env
+__pycache__
+node_modules
+ImgBackup
+.env
 cloudflared.deb

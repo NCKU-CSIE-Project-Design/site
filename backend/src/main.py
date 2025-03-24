@@ -14,22 +14,17 @@ import base64
 from gemini import *
 from stable_diffusion import *
 
-
-# 載入環境變數
 load_dotenv()
 
 app = FastAPI()
-
-# 設置CORS
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # React 開發服務器的地址
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-# 創建圖片儲存目錄
 UPLOAD_DIR = "ImgBackup/Uploads"
 if not os.path.exists(UPLOAD_DIR):
     os.makedirs(UPLOAD_DIR)
@@ -54,7 +49,6 @@ async def analyze_image(
         contents = await image.read()
         filepath = save_image(contents)
         
-        # Convert uploaded image to base64
         face = base64.b64encode(contents).decode()
 
         img_pil = PIL.Image.open(io.BytesIO(contents))
