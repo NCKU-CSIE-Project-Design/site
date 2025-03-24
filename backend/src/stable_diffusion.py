@@ -13,6 +13,7 @@ async def generate_image(prompt, face):
 async def prompt_to_image(prompt):
     try:
         URL = "http://140.116.154.71:7860/sdapi/v1/txt2img"
+        print(prompt)
         payload = {
             "prompt": prompt,
             "negative_prompt": "(normal quality), (low quality), (worst quality), bad-hands-5,  Deep_Negative",
@@ -80,3 +81,7 @@ async def change_face(image, face):
         return image
     except Exception as e:
         return {"error": f"請求或解碼時發生錯誤: {str(e)}"}
+    
+
+
+    

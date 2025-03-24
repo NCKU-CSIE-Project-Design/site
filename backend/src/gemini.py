@@ -17,12 +17,17 @@ def get_analysis_result(colors, img_pil):
     3. 建議適合的服裝顏色搭配
     4. 提供髮色建議
 
-    請用中文回答，並提供詳細的解釋，在最一開始附上此人的性別。
+    請用中文回答，並提供詳細的解釋。
     """
     
     analysis_response = model.generate_content([analysis_prompt, img_pil])
     return analysis_response.text
 
+
+def get_gender(img_pil):
+    gender_prompt = "What is the gender of the person in this picture?"
+    gender_response = model.generate_content([gender_prompt, img_pil])
+    return gender_response.text
 
 
 def get_outfit_prompt(analysis_result, img_pil):
@@ -34,7 +39,8 @@ def get_outfit_prompt(analysis_result, img_pil):
     4. Pose and expression: "standing pose, natural smile"
     5. Lighting and background: "natural lighting, soft lighting, simple background, white background"
     6. Quality and style: "high quality, detailed, 8k uhd, masterpiece, best quality"
-    
+    7. Gender: {get_gender(img_pil)}
+
     Format the prompt as a single line of comma-separated keywords, optimized for S｀table Diffusion.
     """
     

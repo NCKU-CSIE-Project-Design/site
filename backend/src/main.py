@@ -50,7 +50,6 @@ async def analyze_image(
         filepath = save_image(contents)
         
         face = base64.b64encode(contents).decode()
-
         img_pil = PIL.Image.open(io.BytesIO(contents))
         
         if colors:
@@ -66,7 +65,6 @@ async def analyze_image(
         analysis_result = get_analysis_result(colors, img_pil)
         
         outfit_prompt = get_outfit_prompt(analysis_result, img_pil)
-
         outfit_image = await generate_image(outfit_prompt, face)
 
 
