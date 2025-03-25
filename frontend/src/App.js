@@ -501,9 +501,6 @@ function App() {
                         </Box>
                     ) : result ? (
                         <>
-                            <Typography variant="h5" gutterBottom>分析結果</Typography>
-
-                            {/* 添加顏色顯示區域 */}
                             {colors && (
                                 <Box sx={{ mb: 3, p: 2, bgcolor: 'grey.50', borderRadius: 1 }}>
                                     <Typography variant="h6" gutterBottom>偵測到的顏色：</Typography>
@@ -538,7 +535,6 @@ function App() {
                                             <Typography>{part}：{(customColors || colors)[part]}</Typography>
                                         </ColorDisplay>
                                     ))}
-                                    {/* 只在顏色被修改後顯示重新分析按鈕 */}
                                     {colorsChanged && (
                                         <Button
                                             variant="contained"
