@@ -6,18 +6,18 @@ model = genai.GenerativeModel('gemini-1.5-flash')
 
 def get_analysis_result(colors, img_pil):
     analysis_prompt = f"""
-    這是一張人物照片的個人色彩分析：
-    - 頭髮顏色: {colors['頭髮']}
-    - 膚色: {colors['膚色']}
-    - 嘴唇顏色: {colors['嘴唇']}
+    This is a personal color analysis of a person's photo:
+    - Hair color: {colors['頭髮']}
+    - Skin tone: {colors['膚色']}
+    - Lip color: {colors['嘴唇']}
 
-    請以專業的韓式個人色彩顧問的角度，根據以上顏色資訊分析：
-    1. 判斷其適合的個人色彩季節
-    2. 推薦適合的彩妝色調
-    3. 建議適合的服裝顏色搭配
-    4. 提供髮色建議
+    Please analyze the above color information from the perspective of a professional Korean personal color consultant:
+    1. Determine the suitable personal color season
+    2. Recommend suitable makeup shades
+    3. Suggest suitable clothing color combinations
+    4. Provide hair color suggestions
 
-    請用中文回答，並提供詳細的解釋。
+    Please respond in Traditional Chinese, avoid using Korean, and provide detailed explanations. Use Markdown.
     """
     
     analysis_response = model.generate_content([analysis_prompt, img_pil])
@@ -32,15 +32,16 @@ def get_gender(img_pil):
 
 def get_outfit_prompt(analysis_result, img_pil):
     outfit_prompt = f"""
-    Based on the following image analysis (the image is a close-up portrait), create a prompt for Stable Diffusion to generate a full-body outfit photo. Use only keywords and short phrases, separated by commas. Include:
-    1. Main subject: "{get_gender(img_pil)}, asian, university student, {analysis_result}"
-    2. Outfit details: "casual wear, street fashion, korean style"
-    3. Accessories: "hat, earrings, necklace"
+    Analyze the image to determine the suitable outfit for this person and convert this outfit into a prompt for stable diffusion. Use keywords and phrases, separated by commas. Include:
+    1. Subject: "{get_gender(img_pil)}, Asian, university student, full-body shot, {analysis_result}",
+    2. Analyze the person's hairstyle, bangs, and if wearing glasses, analyze the details of the glasses (shape, color, thickness).
+    3. Outfit details: "casual wear, street fashion, Korean style, shoes"
     4. Pose and expression: "standing pose, natural smile"
     5. Lighting and background: "natural lighting, soft lighting, simple background, white background"
-    6. Quality and style: "high quality, detailed, 8k uhd, masterpiece, best quality"
-
-    Format the prompt as a single line of comma-separated keywords, optimized for S｀table Diffusion.
+    6. Quality and style: "high quality, detailed, 8k UHD, masterpiece, best quality"
+    
+    Format the prompt as a single line of comma-separated keywords, optimized for Stable Diffusion.
+    Finally, output only the prompt for stable diffusion.
     """
     
     outfit_response = model.generate_content([outfit_prompt, img_pil])

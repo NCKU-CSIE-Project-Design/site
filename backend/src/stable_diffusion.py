@@ -12,10 +12,13 @@ async def generate_image(prompt, face):
 
 async def prompt_to_image(prompt):
     try:
+        prompt = "full-body shot, head-to-toe shot, " + prompt
+        print(prompt)
+
         URL = "http://140.116.154.71:7860/sdapi/v1/txt2img"
         payload = {
             "prompt": prompt,
-            "negative_prompt": "(normal quality), (low quality), (worst quality), bad-hands-5,  Deep_Negative",
+            "negative_prompt": "(normal quality), (low quality), (worst quality), Deep_Negative",
             "seed": -1,
             "sampler_name": "DPM++ SDE",
             "scheduler": "Karras",
@@ -23,8 +26,8 @@ async def prompt_to_image(prompt):
             "n_iter": 1,
             "steps": 20,
             "cfg_scale": 7,
-            "width": 512,
-            "height": 768,
+            "width": 768,
+            "height": 1152,
             "send_images": "true",
             "save_images": "false",
             "clip_skip": 2,
@@ -65,8 +68,8 @@ async def change_face(image, face):
             "model": "inswapper_128.onnx"
         }
 
-        with open("payload.json", "w", encoding="utf-8") as f:
-            json.dump(payload, f, ensure_ascii=False, indent=4)
+        # with open("payload.json", "w", encoding="utf-8") as f:
+        #     json.dump(payload, f, ensure_ascii=False, indent=4)
 
         response = requests.post(URL, json=payload, headers={'Content-Type': 'application/json'})
         if response.status_code != 200:

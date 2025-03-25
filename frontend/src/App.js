@@ -248,23 +248,23 @@ function App() {
             setError('找不到圖片檔案');
             return;
         }
-        
+        setOutfitImage(null); 
         const formData = new FormData();
         formData.append('image', selectedFile);
         formData.append('colors', JSON.stringify(customColors));
-        setOutfitImage(null);
         setLoading(true);
         try {
             const response = await fetch(`https://api.coloranalysis.fun/analyze`, {
                 method: 'POST',
                 body: formData
             });
-
             const data = await response.json();
             if (data.error) {
                 setError(data.error);
             } else {
                 setResult(data.analysis);
+                setColors(data.colors);
+                setOutfitImage(data.image); // Store the base64 image data
             }
         } catch (error) {
             console.error('Error:', error);
@@ -293,6 +293,11 @@ function App() {
         setColors(null);
         setCustomColors(null);
         setOutfitImage(null);  // 清除推薦穿搭圖片
+    };
+
+    // 添加一個安全的 HTML 渲染函數
+    const createMarkup = (htmlContent) => {
+        return { __html: htmlContent };
     };
 
     return (
@@ -418,7 +423,54 @@ function App() {
                                     style={{
                                         maxWidth: '100%',
                                         height: 'auto',
-                                        borderRadius: '8px'
+                                        borderRadius: '8px',
+                                        cursor: 'pointer'
+                                    }}
+                                    onClick={() => {
+                                        const overlay = document.createElement('div');
+                                        overlay.style.position = 'fixed';
+                                        overlay.style.top = '0';
+                                        overlay.style.left = '0';
+                                        overlay.style.width = '100vw';
+                                        overlay.style.height = '100vh';
+                                        overlay.style.backgroundColor = 'rgba(0, 0, 0, 0.8)';
+                                        overlay.style.display = 'flex';
+                                        overlay.style.justifyContent = 'center';
+                                        overlay.style.alignItems = 'center';
+                                        overlay.style.zIndex = '1000';
+
+                                        const fullScreenImage = document.createElement('img');
+                                        fullScreenImage.src = `data:image/png;base64,${outfitImage}`;
+                                        fullScreenImage.style.maxWidth = '90%';
+                                        fullScreenImage.style.maxHeight = '90%';
+                                        fullScreenImage.style.objectFit = 'contain';
+                                        fullScreenImage.style.borderRadius = '8px';
+
+                                        const closeButton = document.createElement('button');
+                                        closeButton.innerText = '×';
+                                        closeButton.style.position = 'absolute';
+                                        closeButton.style.top = '20px';
+                                        closeButton.style.right = '20px';
+                                        closeButton.style.backgroundColor = 'transparent';
+                                        closeButton.style.color = 'white';
+                                        closeButton.style.border = 'none';
+                                        closeButton.style.fontSize = '2rem';
+                                        closeButton.style.cursor = 'pointer';
+
+                                        const closeOverlay = () => {
+                                            document.body.removeChild(overlay);
+                                        };
+
+                                        closeButton.onclick = closeOverlay;
+                                        overlay.onclick = (e) => {
+                                            if (e.target === overlay) {
+                                                closeOverlay();
+                                            }
+                                        };
+
+                                        overlay.appendChild(fullScreenImage);
+                                        overlay.appendChild(closeButton);
+                                        document.body.appendChild(overlay);
                                     }}
                                 />
                             </Paper>
