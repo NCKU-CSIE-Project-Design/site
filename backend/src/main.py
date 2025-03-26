@@ -42,7 +42,8 @@ def save_image(contents):
 @app.post("/analyze")
 async def analyze_image(
     image: UploadFile = File(...),
-    colors: Optional[str] = Form(None)
+    colors: Optional[str] = Form(None),
+    user_prompt:str = Form("")
 ):
     try:
         contents = await image.read()
@@ -58,13 +59,10 @@ async def analyze_image(
             if colors.get("error"):
                 return { "error": colors.get("error") }
 
-        
         analysis_result = get_analysis_result(colors, img_pil)
-        outfit_prompt = get_outfit_prompt(analysis_result, img_pil)
+        outfit_prompt = get_outfit_prompt(analysis_result, img_pil, user_prompt)
         outfit_image = await generate_image(outfit_prompt, face)
-        
-        # print(analysis_result)
-        
+
         return {
             "analysis": analysis_result,
             "colors": colors,
@@ -87,3 +85,4 @@ if __name__ == "__main__":
         )
     except Exception as e:
         print(f"啟動失敗: {e}")
+

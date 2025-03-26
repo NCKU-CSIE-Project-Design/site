@@ -11,91 +11,18 @@ import {
 import CloudUploadIcon from '@mui/icons-material/CloudUpload';
 import CameraAltIcon from '@mui/icons-material/CameraAlt';
 import ColorizeIcon from '@mui/icons-material/Colorize';
-import { styled } from '@mui/material/styles';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
-import './App.css';
+import './styles/App.css';
+import {
+    UploadBox,
+    HiddenInput,
+    PreviewImage,
+    MarkdownContainer,
+    ColorDisplay
+} from './styles/App';
+import ChatWidget from './chat';
 
-const UploadBox = styled(Paper)(({ theme }) => ({
-    padding: theme.spacing(3),
-    textAlign: 'center',
-    cursor: 'pointer',
-    border: '2px dashed #f8b195',
-    height: '400px',
-    display: 'flex',
-    flexDirection: 'column',
-    justifyContent: 'center',
-    alignItems: 'center',
-    '&:hover': {
-        borderColor: '#f67280',
-    },
-}));
-
-const HiddenInput = styled('input')({
-    display: 'none',
-});
-
-const PreviewImage = styled('img')({
-    maxWidth: '100%',
-    maxHeight: '100%',
-    objectFit: 'contain',
-});
-
-
-
-// 新增 Markdown 樣式組件
-const MarkdownContainer = styled(Box)(({ theme }) => ({
-    '& p': {
-        marginBottom: theme.spacing(2),
-    },
-    '& h1, h2, h3, h4, h5, h6': {
-        marginBottom: theme.spacing(2),
-        marginTop: theme.spacing(3),
-        color: theme.palette.primary.main,
-    },
-    '& ul, ol': {
-        marginBottom: theme.spacing(2),
-        paddingLeft: theme.spacing(3),
-    },
-    '& li': {
-        marginBottom: theme.spacing(1),
-    },
-    '& code': {
-        backgroundColor: theme.palette.grey[100],
-        padding: theme.spacing(0.5, 1),
-        borderRadius: theme.spacing(0.5),
-        fontSize: '0.9em',
-    },
-    '& blockquote': {
-        borderLeft: `4px solid ${theme.palette.primary.main}`,
-        margin: theme.spacing(2, 0),
-        padding: theme.spacing(1, 2),
-        backgroundColor: theme.palette.grey[50],
-    },
-}));
-
-// 添加顏色顯示組件
-const ColorDisplay = styled(Box)(({ theme }) => ({
-    display: 'flex',
-    alignItems: 'center',
-    marginBottom: theme.spacing(2),
-    '& .color-box': {
-        width: 40,
-        height: 40,
-        marginRight: theme.spacing(2),
-        border: '1px solid #ddd',
-        borderRadius: theme.spacing(1),
-        position: 'relative',
-    },
-    '& .color-picker-button': {
-        position: 'absolute',
-        right: -20,
-        top: '50%',
-        transform: 'translateY(-50%)',
-        minWidth: 'auto',
-        padding: 4,
-    },
-}));
 
 function App() {
     const [selectedFile, setSelectedFile] = useState(null);
@@ -295,10 +222,6 @@ function App() {
         setOutfitImage(null);  // 清除推薦穿搭圖片
     };
 
-    // 添加一個安全的 HTML 渲染函數
-    const createMarkup = (htmlContent) => {
-        return { __html: htmlContent };
-    };
 
     return (
         <Container maxWidth="lg">
@@ -547,7 +470,7 @@ function App() {
                                     )}
                                 </Box>
                             )}
-
+                            <ChatWidget />
                             <MarkdownContainer>
                                 <ReactMarkdown remarkPlugins={[remarkGfm]}>
                                     {result}
@@ -562,6 +485,7 @@ function App() {
                         </Box>
                     )}
                 </Paper>
+                <ChatWidget />
             </Box>
         </Container>
     );

@@ -18,7 +18,7 @@ async def prompt_to_image(prompt):
         URL = "http://140.116.154.71:7860/sdapi/v1/txt2img"
         payload = {
             "prompt": prompt,
-            "negative_prompt": "(normal quality), (low quality), (worst quality), Deep_Negative",
+            "negative_prompt": "(normal quality), (low quality), (worst quality), Deep_Negative, (3 legs)",
             "seed": -1,
             "sampler_name": "DPM++ SDE",
             "scheduler": "Karras",
