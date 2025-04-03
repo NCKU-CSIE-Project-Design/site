@@ -62,7 +62,7 @@ async def analyze_image(
         analysis_result = get_analysis_result(colors, img_pil)
         outfit_prompt = get_outfit_prompt(analysis_result, img_pil, user_prompt)
         outfit_image = await generate_image(outfit_prompt, face)
-
+        
         return {
             "analysis": analysis_result,
             "colors": colors,

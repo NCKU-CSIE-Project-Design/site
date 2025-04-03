@@ -35,7 +35,7 @@ function App() {
     const [customColors, setCustomColors] = useState(null);
     const [colorsChanged, setColorsChanged] = useState(false);
     const [outfitImage, setOutfitImage] = useState(null);
-
+    const [message, setMessage] = useState("上傳照片或拍攝照片後的分析結果將顯示在此處");
     const videoRef = useRef(null);
 
     const startCamera = async () => {
@@ -470,7 +470,6 @@ function App() {
                                     )}
                                 </Box>
                             )}
-                            <ChatWidget />
                             <MarkdownContainer>
                                 <ReactMarkdown remarkPlugins={[remarkGfm]}>
                                     {result}
@@ -480,12 +479,17 @@ function App() {
                     ) : (
                         <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%' }}>
                             <Typography color="text.secondary">
-                                上傳照片或拍攝照片後的分析結果將顯示在此處
+                                {message}
                             </Typography>
                         </Box>
                     )}
                 </Paper>
-                <ChatWidget />
+                            <ChatWidget setError={setError} 
+                                        setOutfitImage={setOutfitImage} 
+                                        selectedFile={selectedFile} 
+                                        setSelectedFile={setSelectedFile} 
+                                        setResultMessage={setMessage} 
+                                        />
             </Box>
         </Container>
     );

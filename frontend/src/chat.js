@@ -18,74 +18,70 @@ import {
     sendButtonStyles
 } from './styles/chat';
 
-const ChatWidget = ({ setError, setOutfitImage }) => {
+const ChatWidget = ({ setError, setOutfitImage, selectedFile, setSelectedFile,setResultMessage}) => {
     const [open, setOpen] = useState(false);
-    const [message, setMessage] = useState('');
+    const [chatmessage, setchatMessage] = useState('');
     const [chatHistory, setChatHistory] = useState([]);
-    const [selectedFile, setSelectedFile] = useState(null);
 
     const toggleChat = () => {
         setOpen(!open);
     };
 
     const sendMessage = async () => {
-        if (!selectedFile) {
-            setChatHistory([
-                ...chatHistory,
-                { text: '請上傳圖片', sender: 'bot' },
-            ]);
-        }
-        if (message.trim() || selectedFile) {
-            setChatHistory([...chatHistory, { text: message, sender: 'user' }]);
-            setMessage('');
+        setChatHistory((prevHistory) => [
+            ...prevHistory,
+            { text: chatmessage, sender: 'user' },
+        ]);
+        setchatMessage(''); // 清空輸入框
+    if (!selectedFile) {
+        setChatHistory((prevHistory) => [
+            ...prevHistory,
+            { text: '請上傳圖片', sender: 'bot' },
+        ]);
+        return;
+    }
 
-            const formData = new FormData();
-            formData.append("user_text", message);
-            if (selectedFile) {
-                formData.append("image", selectedFile);
-            }
-            setChatHistory([
-                ...chatHistory,
-                { text: '生成中...', sender: 'bot' },
-            ]);
-            try {
-                const response = await fetch("http://localhost:3001/analyze", {
-                    method: "POST",
-                    body: formData,
-                });
-                const data = await response.json();
-                if (data.error) {
-                    setError(data.error);
-                } else {
-                    setOutfitImage(null);
-                    setOutfitImage(data.image);
-                    setChatHistory([
-                        ...chatHistory,
-                        { text: '生成完畢', sender: 'bot' },
-                    ]);
-                }
-            } catch (error) {
-                console.error("上傳失敗:", error);
-            }
+    if (chatmessage.trim() || selectedFile) {
+        const formData = new FormData();
+        formData.append("user_prompt", chatmessage);
+        if (selectedFile) {
+            formData.append("image", selectedFile);
         }
-    };
+
+        setChatHistory((prevHistory) => [
+            ...prevHistory,
+            { text: '生成中...', sender: 'bot' },
+        ]);
+
+        try {
+            const response = await fetch("https://api.coloranalysis.fun/analyze", {
+                method: "POST",
+                body: formData,
+            });
+            const data = await response.json();
+            if (data.error) {
+                setError(data.error);
+            } else {
+                setOutfitImage(null);
+                setOutfitImage(data.image);
+                setChatHistory((prevHistory) => [
+                    ...prevHistory,
+                    { text: '生成完畢', sender: 'bot' },
+                ]);
+                setResultMessage('您的個人化穿搭已顯示在左側')
+            }
+        } catch (error) {
+            console.error("上傳失敗:", error);
+        }
+    }
+};
+
 
     const handleKeyDown = (event) => {
         if (event.key === 'Enter') {
             sendMessage();
         }
     };
-
-    const handleFileSelect = (event) => {
-        const file = event.target.files[0];
-        event.target.value = '';
-        if (file && file.type.startsWith('image/')) {
-            setSelectedFile(file);
-        } else {
-            alert('請上傳圖片文件！');
-        }
-    };
-
     return (
         <>
             <StyledChatButton onClick={toggleChat}>
@@ -95,7 +91,7 @@ const ChatWidget = ({ setError, setOutfitImage }) => {
             <Slide direction="left" in={open} mountOnEnter unmountOnExit>
                 <StyledChatPaper>
                     <StyledChatHeader>
-                        <StyledHeaderText variant="h6">AI助手</StyledHeaderText>
+                        <StyledHeaderText variant="h6">AI穿搭助手</StyledHeaderText>
                         <StyledCloseButton size="small" onClick={toggleChat}>
                             <CloseIcon />
                         </StyledCloseButton>
@@ -117,8 +113,8 @@ const ChatWidget = ({ setError, setOutfitImage }) => {
                             variant="outlined"
                             size="small"
                             placeholder="輸入您想要的穿搭..."
-                            value={message}
-                            onChange={(e) => setMessage(e.target.value)}
+                            value={chatmessage}
+                            onChange={(e) => setchatMessage(e.target.value)}
                             onKeyDown={handleKeyDown}
                             sx={textFieldStyles}
                         />
@@ -129,12 +125,6 @@ const ChatWidget = ({ setError, setOutfitImage }) => {
                             <SendIcon />
                         </IconButton>
                     </StyledChatInput>
-
-                    <StyledFileInput
-                        type="file"
-                        accept="image/*"
-                        onChange={handleFileSelect}
-                    />
                 </StyledChatPaper>
             </Slide>
         </>

@@ -49,7 +49,20 @@ def get_outfit_prompt(analysis_result, face, user_prompt):
 
 
     outfit_response = model.generate_content([outfit_prompt, face]).text
-    outfit_response = f"(1{get_gender(face)}: 1.1), " + outfit_response
+    outfit_response = f"(1{get_gender(face)}: 1.5), " + outfit_response
     if user_prompt != "":
+        user_prompt=translate_to_english(user_prompt)
         outfit_response = f"({user_prompt}: 1.1), " + outfit_response
     return outfit_response
+
+
+def translate_to_english(text):
+    detect_prompt = f"Detect the language of the following text and return only the language name: {text}"
+    detected_language = model.generate_content(detect_prompt).text.strip()
+    if "Chinese" in detected_language:
+        translate_prompt = f"Translate the following Traditional Chinese text into English: {text}"
+        translation = model.generate_content(translate_prompt).text.strip()
+        return translation
+
+    # 若語言不是中文，直接回傳原文字
+    return text

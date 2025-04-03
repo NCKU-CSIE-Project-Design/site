@@ -7,7 +7,18 @@ GenImg_DIR = "ImgBackup/GenImg"
 
 async def generate_image(prompt, face):
     image = await prompt_to_image(prompt)
+    if image == None:
+        with open("image/error.jpg", "rb") as image_file:
+            image_data = image_file.read()
+            base64_encoded_data = base64.b64encode(image_data)
+            image = base64_encoded_data.decode('utf-8')
+            return image
+
+
     image_change_face = await change_face(image, face)
+    if image_change_face == None:
+        return image
+
     return image_change_face
 
 async def prompt_to_image(prompt):
@@ -35,9 +46,10 @@ async def prompt_to_image(prompt):
                 "sd_model_checkpoint": "ChilloutRealistic"
             }
         }
+        print(payload)
         response = requests.post(URL, json=payload, headers={'Content-Type': 'application/json'})
         if response.status_code != 200:
-            return {"error": f"WebUI 請求失敗，狀態碼: {response.status_code}", "details": response.text}
+            return {"error": f"prompt_to_image 請求失敗，狀態碼: {response.status_code}", "details": response}
         data = response.json()
         image = data["images"][0]
         decoded_img_data = base64.b64decode(image)
@@ -49,7 +61,8 @@ async def prompt_to_image(prompt):
 
         return image
     except Exception as e:
-        return {"error": f"請求或解碼時發生錯誤: {str(e)}"}
+        print(f"請求或解碼時發生錯誤: {str(e)}")
+        return None
 
 
 async def change_face(image, face):
@@ -73,7 +86,8 @@ async def change_face(image, face):
 
         response = requests.post(URL, json=payload, headers={'Content-Type': 'application/json'})
         if response.status_code != 200:
-            return {"error": f"WebUI 請求失敗，狀態碼: {response.status_code}", "details": response.text}
+            print(f"change_face 請求失敗，狀態碼: {response.status_code}, details: {response}")
+            return None
         data = response.json()
         
         image = data["image"]
@@ -86,5 +100,6 @@ async def change_face(image, face):
 
         return image
     except Exception as e:
-        return {"error": f"請求或解碼時發生錯誤: {str(e)}"}
+        print(f"請求或解碼時發生錯誤: {str(e)}")
+        return None
     
