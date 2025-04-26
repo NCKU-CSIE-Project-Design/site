@@ -364,8 +364,8 @@ function App() {
 
                                         const fullScreenImage = document.createElement('img');
                                         fullScreenImage.src = `data:image/png;base64,${outfitImage}`;
-                                        fullScreenImage.style.maxWidth = '90%';
-                                        fullScreenImage.style.maxHeight = '90%';
+                                        fullScreenImage.style.maxWidth = '100%';
+                                        fullScreenImage.style.maxHeight = 'auto';
                                         fullScreenImage.style.objectFit = 'contain';
                                         fullScreenImage.style.borderRadius = '8px';
 

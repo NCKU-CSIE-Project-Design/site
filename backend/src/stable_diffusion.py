@@ -1,7 +1,6 @@
 import requests
 import base64
 from datetime import datetime
-import json
 GenImg_DIR = "ImgBackup/GenImg"
 
 
@@ -24,6 +23,8 @@ async def generate_image(prompt, face):
 async def prompt_to_image(prompt):
     try:
         prompt = "full-body shot, head-to-toe shot, " + prompt
+        
+        # prompt += " , <lora:test0:1>"
         print(prompt)
 
         URL = "http://140.116.154.71:7860/sdapi/v1/txt2img"
@@ -37,8 +38,8 @@ async def prompt_to_image(prompt):
             "n_iter": 1,
             "steps": 20,
             "cfg_scale": 7,
-            "width": 768,
-            "height": 1152,
+            "width": 512,
+            "height": 768,
             "send_images": "true",
             "save_images": "false",
             "clip_skip": 2,
