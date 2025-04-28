@@ -49,19 +49,22 @@ def get_outfit_prompt(analysis_result, face, user_prompt):
     4. Outfit details: "casual wear, street fashion, Korean style, shoes"
     5. Lighting and background: "natural lighting, soft lighting, simple background, white background"
     6. Quality and style: "high quality, detailed, 8k UHD, masterpiece, best quality"
+    7. full-body shot, head-to-toe shot
 
     Format the prompt as a single line of comma-separated keywords, optimized for Stable Diffusion.
     Finally, output only the prompt for stable diffusion in English.
     """
-    
-    
-    # return f"1 {get_gender(face)}"
 
     outfit_response = model.generate_content([outfit_prompt, face]).text
-    outfit_response = f"(1 {get_gender(face)}: 1.5), " + outfit_response
+    
+    # add user prompt
     if user_prompt != "":
         user_prompt = translate_to_english(user_prompt)
         outfit_response = f"({user_prompt}: 1.1), " + outfit_response
+    
+    # add gender
+    outfit_response = f"(1 {get_gender(face)}: 1.5), " + outfit_response
+
     return outfit_response
 
 

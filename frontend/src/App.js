@@ -35,6 +35,7 @@ function App() {
     const [customColors, setCustomColors] = useState(null);
     const [colorsChanged, setColorsChanged] = useState(false);
     const [outfitImage, setOutfitImage] = useState(null);
+    const [selectedStyle, setSelectedStyle] = useState(null);
     const [message, setMessage] = useState("上傳照片或拍攝照片後的分析結果將顯示在此處");
     const videoRef = useRef(null);
 
@@ -122,6 +123,7 @@ function App() {
         setError('');
         setColors(null);
         setOutfitImage(null);
+        setSelectedStyle(null);
 
         const formData = new FormData();
         formData.append('image', selectedFile);
@@ -133,13 +135,23 @@ function App() {
             });
 
             const data = await response.json();
-
+            console.log(data)
+            
             if (data.error) {
                 setError(data.error);
             } else {
                 setResult(data.analysis);
                 setColors(data.colors);
-                setOutfitImage(data.image); // Store the base64 image data
+
+                const outfitImages = {};
+                data.image.forEach(item => {
+                    outfitImages[item.style] = item.image;
+                });
+                setOutfitImage(outfitImages);
+                // Set the first style as default
+                if (data.image && data.image.length > 0) {
+                    setSelectedStyle(data.image[0].style);
+                }
             }
         } catch (error) {
             console.error('Error:', error);
@@ -326,11 +338,23 @@ function App() {
                             開始分析
                         </Button>
                     </Stack>
-                    {outfitImage && (
+                    {outfitImage && selectedStyle && (
                         <Box sx={{ mt: 4, textAlign: 'center' }}>
                             <Typography variant="h6" gutterBottom>
                                 推薦穿搭
                             </Typography>
+                            <Box sx={{ mb: 2, display: 'flex', gap: 1, flexWrap: 'wrap', justifyContent: 'center' }}>
+                                {Object.keys(outfitImage).map((style) => (
+                                    <Button
+                                        key={style}
+                                        variant={selectedStyle === style ? "contained" : "outlined"}
+                                        onClick={() => setSelectedStyle(style)}
+                                        sx={{ textTransform: 'none' }}
+                                    >
+                                        {style}
+                                    </Button>
+                                ))}
+                            </Box>
                             <Paper 
                                 elevation={3} 
                                 sx={{ 
@@ -341,8 +365,8 @@ function App() {
                                 }}
                             >
                                 <img 
-                                    src={`data:image/png;base64,${outfitImage}`}
-                                    alt="推薦穿搭"
+                                    src={`data:image/png;base64,${outfitImage[selectedStyle]}`}
+                                    alt={`${selectedStyle}穿搭`}
                                     style={{
                                         maxWidth: '100%',
                                         height: 'auto',
@@ -363,7 +387,7 @@ function App() {
                                         overlay.style.zIndex = '1000';
 
                                         const fullScreenImage = document.createElement('img');
-                                        fullScreenImage.src = `data:image/png;base64,${outfitImage}`;
+                                        fullScreenImage.src = `data:image/png;base64,${outfitImage[selectedStyle]}`;
                                         fullScreenImage.style.maxWidth = '100%';
                                         fullScreenImage.style.maxHeight = 'auto';
                                         fullScreenImage.style.objectFit = 'contain';
