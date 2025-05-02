@@ -2,7 +2,7 @@ import requests
 import base64
 GenImg_DIR = "ImgBackup/GenImg"
 
-LoRA = ["nolora", "ningtest2", "ningtest"]
+LoRA = ["nolora", "preppy_style"]
 
 async def get_error_img():
     with open("image/error.jpg", "rb") as image_file:
