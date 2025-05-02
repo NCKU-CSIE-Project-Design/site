@@ -23,30 +23,36 @@ import {
 } from './styles/App';
 import ChatWidget from './chat';
 
+interface Colors {
+    [key: string]: string;
+}
 
-function App() {
-    const [selectedFile, setSelectedFile] = useState(null);
-    const [preview, setPreview] = useState('');
-    const [loading, setLoading] = useState(false);
-    const [result, setResult] = useState('');
-    const [isCameraActive, setIsCameraActive] = useState(false);
-    const [error, setError] = useState('');
-    const [colors, setColors] = useState(null);
-    const [customColors, setCustomColors] = useState(null);
-    const [colorsChanged, setColorsChanged] = useState(false);
-    const [outfitImage, setOutfitImage] = useState(null);
-    const [selectedStyle, setSelectedStyle] = useState(null);
-    const [message, setMessage] = useState("上傳照片或拍攝照片後的分析結果將顯示在此處");
-    const videoRef = useRef(null);
+interface OutfitImages {
+    [key: string]: string;
+}
 
-    const startCamera = async () => {
+const App: React.FC = () => {
+    const [selectedFile, setSelectedFile] = useState<File | null>(null);
+    const [preview, setPreview] = useState<string>('');
+    const [loading, setLoading] = useState<boolean>(false);
+    const [result, setResult] = useState<string>('');
+    const [isCameraActive, setIsCameraActive] = useState<boolean>(false);
+    const [error, setError] = useState<string>('');
+    const [colors, setColors] = useState<Colors | null>(null);
+    const [customColors, setCustomColors] = useState<Colors | null>(null);
+    const [colorsChanged, setColorsChanged] = useState<boolean>(false);
+    const [outfitImage, setOutfitImage] = useState<OutfitImages | null>(null);
+    const [selectedStyle, setSelectedStyle] = useState<string | null>(null);
+    const [message, setMessage] = useState<string>("上傳照片或拍攝照片後的分析結果將顯示在此處");
+    const videoRef = useRef<HTMLVideoElement>(null);
+
+    const startCamera = async (): Promise<void> => {
         try {
             const stream = await navigator.mediaDevices.getUserMedia({
                 video: { facingMode: 'user' }
             });
-            setIsCameraActive(true);  // 先設置相機狀態為開啟
+            setIsCameraActive(true);
 
-            // 使用 setTimeout 確保 video 元素已經渲染
             setTimeout(() => {
                 if (videoRef.current) {
                     videoRef.current.srcObject = stream;
@@ -60,41 +66,43 @@ function App() {
         }
     };
 
-    const stopCamera = () => {
+    const stopCamera = (): void => {
         if (videoRef.current && videoRef.current.srcObject) {
-            const tracks = videoRef.current.srcObject.getTracks();
+            const tracks = (videoRef.current.srcObject as MediaStream).getTracks();
             tracks.forEach(track => track.stop());
         }
         setIsCameraActive(false);
     };
 
-    const takePhoto = () => {
+    const takePhoto = (): void => {
         if (videoRef.current) {
             const canvas = document.createElement('canvas');
             canvas.width = videoRef.current.videoWidth;
             canvas.height = videoRef.current.videoHeight;
             const ctx = canvas.getContext('2d');
-            ctx.drawImage(videoRef.current, 0, 0);
-            const dataUrl = canvas.toDataURL('image/jpeg');
-            setPreview(dataUrl);
+            if (ctx) {
+                ctx.drawImage(videoRef.current, 0, 0);
+                const dataUrl = canvas.toDataURL('image/jpeg');
+                setPreview(dataUrl);
 
-            fetch(dataUrl)
-                .then(res => res.blob())
-                .then(blob => {
-                    const file = new File([blob], "camera-photo.jpg", { type: "image/jpeg" });
-                    setSelectedFile(file);
-                });
+                fetch(dataUrl)
+                    .then(res => res.blob())
+                    .then(blob => {
+                        const file = new File([blob], "camera-photo.jpg", { type: "image/jpeg" });
+                        setSelectedFile(file);
+                    });
+            }
         }
     };
 
-    const handleFileSelect = (event) => {
-        const file = event.target.files[0];
+    const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>): void => {
+        const file = event.target.files?.[0];
         event.target.value = '';
         if (file && file.type.startsWith('image/')) {
             setSelectedFile(file);
             const reader = new FileReader();
             reader.onloadend = () => {
-                setPreview(reader.result);
+                setPreview(reader.result as string);
             };
             reader.readAsDataURL(file);
         } else {
@@ -102,20 +110,20 @@ function App() {
         }
     };
 
-    const handleDrop = (event) => {
+    const handleDrop = (event: React.DragEvent<HTMLDivElement>): void => {
         event.preventDefault();
         const file = event.dataTransfer.files[0];
         if (file && file.type.startsWith('image/')) {
             setSelectedFile(file);
             const reader = new FileReader();
             reader.onloadend = () => {
-                setPreview(reader.result);
+                setPreview(reader.result as string);
             };
             reader.readAsDataURL(file);
         }
     };
 
-    const handleAnalyze = async () => {
+    const handleAnalyze = async (): Promise<void> => {
         if (!selectedFile) return;
 
         setLoading(true);
@@ -143,12 +151,11 @@ function App() {
                 setResult(data.analysis);
                 setColors(data.colors);
 
-                const outfitImages = {};
-                data.image.forEach(item => {
+                const outfitImages: OutfitImages = {};
+                data.image.forEach((item: { style: string; image: string }) => {
                     outfitImages[item.style] = item.image;
                 });
                 setOutfitImage(outfitImages);
-                // Set the first style as default
                 if (data.image && data.image.length > 0) {
                     setSelectedStyle(data.image[0].style);
                 }
@@ -160,11 +167,10 @@ function App() {
             setLoading(false);
         }
     };
-    const handleColorChange = (part, newColor) => {
+
+    const handleColorChange = (part: string, newColor: string): void => {
         setCustomColors(prevColors => {
-            // 如果 prevColors 为空，则使用原始的 colors 作为基础
             const baseColors = prevColors || colors;
-            // 创建一个新对象，保留所有现有颜色，只更新指定部位的颜色
             return {
                 ...baseColors,
                 [part]: newColor
@@ -172,17 +178,14 @@ function App() {
         });
         setColorsChanged(true);
     };
-    
-    
-    // 使用 useEffect 監聽 customColors，確保顯示 "重新分析" 按鈕
+
     useEffect(() => {
         if (customColors) {
             setColorsChanged(true);
         }
     }, [customColors]);
-    
 
-    const handleReanalyze = async () => {
+    const handleReanalyze = async (): Promise<void> => {
         if (!selectedFile) {
             setError('找不到圖片檔案');
             return;
@@ -203,7 +206,7 @@ function App() {
             } else {
                 setResult(data.analysis);
                 setColors(data.colors);
-                setOutfitImage(data.image); // Store the base64 image data
+                setOutfitImage(data.image);
             }
         } catch (error) {
             console.error('Error:', error);
@@ -214,26 +217,23 @@ function App() {
         }
     };
 
-    const resetUpload = () => {
-        // 如果相機開啟中，先關閉相機
+    const resetUpload = (): void => {
         if (isCameraActive) {
             if (videoRef.current && videoRef.current.srcObject) {
-                const tracks = videoRef.current.srcObject.getTracks();
+                const tracks = (videoRef.current.srcObject as MediaStream).getTracks();
                 tracks.forEach(track => track.stop());
             }
             setIsCameraActive(false);
         }
 
-        // 重置所有狀態
         setPreview('');
         setSelectedFile(null);
         setResult('');
         setError('');
         setColors(null);
         setCustomColors(null);
-        setOutfitImage(null);  // 清除推薦穿搭圖片
+        setOutfitImage(null);
     };
-
 
     return (
         <Container maxWidth="lg">
@@ -251,7 +251,7 @@ function App() {
                     <UploadBox
                         onDrop={handleDrop}
                         onDragOver={(e) => e.preventDefault()}
-                        onClick={() => !isCameraActive && document.getElementById('file-input').click()}
+                        onClick={() => !isCameraActive && document.getElementById('file-input')?.click()}
                     >
                         {preview ? (
                             <PreviewImage src={preview} alt="預覽圖" />
@@ -284,9 +284,6 @@ function App() {
                             onChange={handleFileSelect}
                         />
                     </UploadBox>
-
-                    {/* Move outfit image display here */}
-                    
 
                     <Stack direction="row" spacing={2} sx={{ mt: 2 }}>
                         {preview && (
@@ -462,12 +459,10 @@ function App() {
                                                         input.type = 'color';
                                                         input.value = (customColors || colors)[part];
                                                         
-                                                        // 使用 oninput 來即時更新顏色顯示
                                                         input.oninput = (e) => {
-                                                            handleColorChange(part, e.target.value);
+                                                            handleColorChange(part, (e.target as HTMLInputElement).value);
                                                         };
                                                         
-                                                        // 防止觸發其他事件
                                                         input.addEventListener('change', (e) => {
                                                             e.preventDefault();
                                                             e.stopPropagation();
@@ -508,14 +503,16 @@ function App() {
                         </Box>
                     )}
                 </Paper>
-                            <ChatWidget setError={setError} 
-                                        setOutfitImage={setOutfitImage} 
-                                        selectedFile={selectedFile} 
-                                        setSelectedFile={setSelectedFile} 
-                                        setResultMessage={setMessage} 
-                                        />
+                <ChatWidget 
+                    setError={setError} 
+                    setOutfitImage={setOutfitImage} 
+                    selectedFile={selectedFile} 
+                    setSelectedFile={setSelectedFile} 
+                    setResultMessage={setMessage} 
+                />
             </Box>
         </Container>
     );
-}
+};
+
 export default App; 

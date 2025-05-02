@@ -99,41 +99,31 @@ export const StyledChatInput = styled(Box)({
   margin: '10px',
 });
 
-export const StyledFileInput = styled('input')({
-  marginTop: '10px',
-  color: 'white',
-});
-
-// TextField Styles
+// TextField and Button Styles
 export const textFieldStyles = {
-  '& .MuiInputBase-root': {
-    color: 'white',
-  },
   '& .MuiOutlinedInput-root': {
+    '& fieldset': {
+      borderColor: 'transparent',
+    },
+    '&:hover fieldset': {
+      borderColor: 'transparent',
+    },
+    '&.Mui-focused fieldset': {
+      borderColor: 'transparent',
+    },
+    backgroundColor: '#171616',
     color: 'white',
+    borderRadius: '8px',
   },
-  '& .MuiOutlinedInput-input': {
+  '& .MuiInputBase-input': {
     color: 'white',
-  },
-  '& .MuiOutlinedInput-notchedOutline': {
-    borderColor: 'gray',
-  },
-  '& .MuiOutlinedInput-root:hover .MuiOutlinedInput-notchedOutline': {
-    borderColor: 'gray',
-  },
-  '& .MuiOutlinedInput-root.Mui-focused .MuiOutlinedInput-notchedOutline': {
-    borderColor: 'gray',
-  },
-  '& .MuiInputBase-input::placeholder': {
-    color: 'white',
-    opacity: 1,
   },
 };
 
-// Send Button Styles
 export const sendButtonStyles = {
-  color: '#808080',
+  color: 'white',
+  marginLeft: '8px',
   '&:hover': {
-    backgroundColor: 'rgba(128, 128, 128, 0.04)',
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
   },
 }; 
