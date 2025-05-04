@@ -125,7 +125,7 @@ def get_color(filepath):
     
     # 初始化人臉檢測器和特徵點檢測器
     detector = dlib.get_frontal_face_detector()
-    predictor = dlib.shape_predictor('shape_predictor_68_face_landmarks.dat')
+    predictor = dlib.shape_predictor('docs/shape_predictor_68_face_landmarks.dat')
     
     # 檢測人臉
     faces = detector(img_cv)

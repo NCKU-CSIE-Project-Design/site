@@ -12,9 +12,11 @@ import json
 
 import base64
 from gemini import *
-from stable_diffusion import *
+from stable_diffusion import generate_image_from_sd, change_face_from_sd
+from flux import generate_image_from_flux
 
 load_dotenv()
+LoRA = ["nolora", "japan4"]
 
 app = FastAPI()
 app.add_middleware(
@@ -38,7 +40,7 @@ def save_image(contents):
         f.write(contents)
 
     return filepath
-
+    
 @app.post("/analyze")
 async def analyze_image(
     image: UploadFile = File(...),
@@ -61,17 +63,19 @@ async def analyze_image(
 
         analysis_result = get_analysis_result(colors, img_pil)
         outfit_prompt = get_outfit_prompt(analysis_result, img_pil, user_prompt)
-        outfit_image = await generate_image(outfit_prompt, face)
+        # outfit_image = await generate_image_from_sd(outfit_prompt, LoRA)
+        outfit_image = await generate_image_from_flux(outfit_prompt, LoRA)
+        outfit_image_changed_face = await change_face_from_sd(outfit_image, face)
         
         return {
             "analysis": analysis_result,
             "colors": colors,
-            "image": outfit_image
+            "image": outfit_image_changed_face
         }
 
     except Exception as e:
         return {
-            "error": f"處理圖片時發生錯誤，請確保上傳的是有效的圖片檔案。詳細錯誤：{str(e)}"
+            "error": f"Error：{str(e)}"
         }
 
 if __name__ == "__main__":

@@ -1,17 +1,13 @@
-import requests
-import base64
-GenImg_DIR = "ImgBackup/GenImg"
-
-LoRA = ["nolora", "preppy_style"]
+import requests, base64
 
 async def get_error_img():
-    with open("image/error.jpg", "rb") as image_file:
+    with open("static/error.jpg", "rb") as image_file:
         image_data = image_file.read()
         base64_encoded_data = base64.b64encode(image_data)
         image = base64_encoded_data.decode('utf-8')
         return image
-
-async def generate_image(prompt, face):
+    
+async def generate_image_from_sd(prompt, LoRA):
     results = []
     for lora in LoRA:
         if lora == "nolora":
@@ -22,19 +18,12 @@ async def generate_image(prompt, face):
         if image == None:
             image = get_error_img()
             print("error on prompt_to_image()")
-        else:
-            image = await change_face(image, face)
-
-            if image == None:
-                image = get_error_img()
-                print("error on change_face()")
 
         results.append({
             "style": lora,
             "image": image
         })
 
-    # print(results)
     return results
 
 async def prompt_to_image(prompt):
@@ -68,6 +57,17 @@ async def prompt_to_image(prompt):
     return image
 
 
+async def change_face_from_sd(images, face):
+    for image in images:
+        image_changed_face = await change_face(image["image"], face)
+
+        if image_changed_face == None:
+            image_changed_face = await get_error_img()
+            print("error on change_face()")
+        
+        image["image"] = image_changed_face
+    
+    return images
 
 async def change_face(image, face):
     try:
