@@ -11,7 +11,7 @@ cd frontend
 npm install
 
 # Start development server
-npm start
+sudo npm run dev
 
 ```
 
@@ -19,5 +19,5 @@ npm start
 
 ```bash
 cd backend
-python3 main.py
+python3 src/main.py
 ```
