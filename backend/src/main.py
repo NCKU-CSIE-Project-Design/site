@@ -63,8 +63,10 @@ async def analyze_image(
 
         analysis_result = get_analysis_result(colors, img_pil)
         outfit_prompt = get_outfit_prompt(analysis_result, img_pil, user_prompt)
-        # outfit_image = await generate_image_from_sd(outfit_prompt, LoRA)
-        outfit_image = await generate_image_from_flux(outfit_prompt, LoRA)
+        
+        outfit_image = await generate_image_from_flux(outfit_prompt) \
+                     + await generate_image_from_sd(outfit_prompt, LoRA)
+        
         outfit_image_changed_face = await change_face_from_sd(outfit_image, face)
         
         return {

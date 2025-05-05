@@ -1,0 +1,19 @@
+{
+    "prompt": "",
+    "negative_prompt": "(normal quality), (low quality), (worst quality), Deep_Negative, (3 legs)",
+    "seed": 12,
+    "sampler_name": "DPM++ SDE",
+    "scheduler": "Karras",
+    "batch_size": 1,
+    "n_iter": 1,
+    "steps": 20,
+    "cfg_scale": 7,
+    "width": 512,
+    "height": 768,
+    "send_images": "true",
+    "save_images": "false",
+    "clip_skip": 2,
+    "override_settings": {
+        "sd_model_checkpoint": "ChilloutRealistic"
+    }
+} 

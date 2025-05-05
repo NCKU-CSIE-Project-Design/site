@@ -1,0 +1,10 @@
+{
+    "source_image": "",
+    "target_image": "",
+    "face_index": [0],
+    "scale": 1,
+    "upscale_visibility": 1,
+    "face_restorer": "None",
+    "restorer_visibility": 1,
+    "model": "inswapper_128.onnx"
+} 

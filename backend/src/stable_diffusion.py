@@ -1,4 +1,4 @@
-import requests, base64
+import requests, base64, json
 
 async def get_error_img():
     with open("static/error.jpg", "rb") as image_file:
@@ -20,7 +20,7 @@ async def generate_image_from_sd(prompt, LoRA):
             print("error on prompt_to_image()")
 
         results.append({
-            "style": lora,
+            "style": f"{lora} style",
             "image": image
         })
 
@@ -28,25 +28,12 @@ async def generate_image_from_sd(prompt, LoRA):
 
 async def prompt_to_image(prompt):
     URL = "http://140.116.154.71:7860/sdapi/v1/txt2img"
-    payload = {
-        "prompt": prompt,
-        "negative_prompt": "(normal quality), (low quality), (worst quality), Deep_Negative, (3 legs)",
-        "seed": 12,
-        "sampler_name": "DPM++ SDE",
-        "scheduler": "Karras",
-        "batch_size": 1,
-        "n_iter": 1,
-        "steps": 20,
-        "cfg_scale": 7,
-        "width": 512,
-        "height": 768,
-        "send_images": "true",
-        "save_images": "false",
-        "clip_skip": 2,
-        "override_settings": {
-            "sd_model_checkpoint": "ChilloutRealistic"
-        }
-    }
+    
+    with open("docs/sd_config.json", "r") as f:
+        payload = json.load(f)
+    
+    payload["prompt"] = prompt
+    
     print(payload)
     response = requests.post(URL, json=payload, headers={'Content-Type': 'application/json'})
     if response.status_code != 200:
@@ -72,18 +59,12 @@ async def change_face_from_sd(images, face):
 async def change_face(image, face):
     try:
         URL = "http://140.116.154.71:7860/roop/image" 
-        payload = {
-            "source_image": face,
-            "target_image": image,
-            "face_index": [
-                0
-            ],
-            "scale": 1,
-            "upscale_visibility": 1,
-            "face_restorer": "None",
-            "restorer_visibility": 1,
-            "model": "inswapper_128.onnx"
-        }
+        
+        with open("docs/roop_config.json", "r") as f:
+            payload = json.load(f)
+        
+        payload["source_image"] = face
+        payload["target_image"] = image
 
         response = requests.post(URL, json=payload, headers={'Content-Type': 'application/json'})
         if response.status_code != 200:
