@@ -1,3 +1,5 @@
+'use client';
+
 import React, { useState } from 'react';
 import { IconButton, TextField, Slide } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
@@ -15,31 +17,29 @@ import {
     StyledChatInput,
     textFieldStyles,
     sendButtonStyles
-} from './styles/chat';
+} from '../styles/chat';
 
-interface ChatMessage {
-    text: string;
-    sender: 'user' | 'bot';
+interface Message {
+    role: 'user' | 'assistant';
+    content: string;
 }
 
 interface ChatWidgetProps {
     setError: (error: string) => void;
-    setOutfitImage: (image: any) => void;
+    setOutfitImage: (image: { [key: string]: string } | null) => void;
     selectedFile: File | null;
-    setSelectedFile: (file: File | null) => void;
     setResultMessage: (message: string) => void;
 }
 
-const ChatWidget: React.FC<ChatWidgetProps> = ({ 
+export default function ChatWidget({ 
     setError, 
     setOutfitImage, 
-    selectedFile, 
-    setSelectedFile,
+    selectedFile,
     setResultMessage 
-}) => {
+}: ChatWidgetProps) {
     const [open, setOpen] = useState<boolean>(false);
     const [chatmessage, setchatMessage] = useState<string>('');
-    const [chatHistory, setChatHistory] = useState<ChatMessage[]>([]);
+    const [chatHistory, setChatHistory] = useState<Message[]>([]);
 
     const toggleChat = (): void => {
         setOpen(!open);
@@ -48,14 +48,14 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({
     const sendMessage = async (): Promise<void> => {
         setChatHistory((prevHistory) => [
             ...prevHistory,
-            { text: chatmessage, sender: 'user' },
+            { role: 'user', content: chatmessage },
         ]);
         setchatMessage('');
 
         if (!selectedFile) {
             setChatHistory((prevHistory) => [
                 ...prevHistory,
-                { text: '請上傳圖片', sender: 'bot' },
+                { role: 'assistant', content: '請上傳圖片' },
             ]);
             return;
         }
@@ -69,7 +69,7 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({
 
             setChatHistory((prevHistory) => [
                 ...prevHistory,
-                { text: '生成中...', sender: 'bot' },
+                { role: 'assistant', content: '生成中...' },
             ]);
 
             try {
@@ -85,7 +85,7 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({
                     setOutfitImage(data.image);
                     setChatHistory((prevHistory) => [
                         ...prevHistory,
-                        { text: '生成完畢', sender: 'bot' },
+                        { role: 'assistant', content: '生成完畢' },
                     ]);
                     setResultMessage('您的個人化穿搭已顯示在左側');
                 }
@@ -118,13 +118,13 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({
 
                     <StyledChatContent>
                         {chatHistory.map((message, index) => (
-                            message.sender === 'user' ? (
+                            message.role === 'user' ? (
                                 <StyledUserMessage key={index}>
-                                    {message.text}
+                                    {message.content}
                                 </StyledUserMessage>
                             ) : (
                                 <StyledBotMessage key={index}>
-                                    {message.text}
+                                    {message.content}
                                 </StyledBotMessage>
                             )
                         ))}
@@ -153,5 +153,3 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({
         </>
     );
 };
-
-export default ChatWidget; 

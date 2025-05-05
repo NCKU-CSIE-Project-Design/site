@@ -1,27 +1,15 @@
+"use client"
+
 import React, { useState, useRef, useEffect } from 'react';
-import {
-    Container,
-    Box,
-    Typography,
-    Button,
-    CircularProgress,
-    Paper,
-    Stack
-} from '@mui/material';
+import { Container, Box, Typography, Button, CircularProgress, Paper, Stack} from '@mui/material';
 import CloudUploadIcon from '@mui/icons-material/CloudUpload';
 import CameraAltIcon from '@mui/icons-material/CameraAlt';
 import ColorizeIcon from '@mui/icons-material/Colorize';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
-import './styles/App.css';
-import {
-    UploadBox,
-    HiddenInput,
-    PreviewImage,
-    MarkdownContainer,
-    ColorDisplay
-} from './styles/App';
+import { UploadBox, HiddenInput, PreviewImage, MarkdownContainer, ColorDisplay} from '../styles/App';
 import ChatWidget from './chat';
+import Image from 'next/image';
 
 interface Colors {
     [key: string]: string;
@@ -31,7 +19,7 @@ interface OutfitImages {
     [key: string]: string;
 }
 
-const App: React.FC = () => {
+export default function Home() {
     const [selectedFile, setSelectedFile] = useState<File | null>(null);
     const [preview, setPreview] = useState<string>('');
     const [loading, setLoading] = useState<boolean>(false);
@@ -225,7 +213,6 @@ const App: React.FC = () => {
             }
             setIsCameraActive(false);
         }
-
         setPreview('');
         setSelectedFile(null);
         setResult('');
@@ -250,7 +237,7 @@ const App: React.FC = () => {
                 <Box>
                     <UploadBox
                         onDrop={handleDrop}
-                        onDragOver={(e) => e.preventDefault()}
+                        onDragOver={(e: React.DragEvent<HTMLDivElement>) => e.preventDefault()}
                         onClick={() => !isCameraActive && document.getElementById('file-input')?.click()}
                     >
                         {preview ? (
@@ -361,9 +348,11 @@ const App: React.FC = () => {
                                     borderRadius: 2
                                 }}
                             >
-                                <img 
+                                <Image
                                     src={`data:image/png;base64,${outfitImage[selectedStyle]}`}
                                     alt={`${selectedStyle}穿搭`}
+                                    width={500}
+                                    height={500}
                                     style={{
                                         maxWidth: '100%',
                                         height: 'auto',
@@ -507,12 +496,9 @@ const App: React.FC = () => {
                     setError={setError} 
                     setOutfitImage={setOutfitImage} 
                     selectedFile={selectedFile} 
-                    setSelectedFile={setSelectedFile} 
                     setResultMessage={setMessage} 
                 />
             </Box>
         </Container>
     );
 };
-
-export default App; 
