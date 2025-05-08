@@ -16,7 +16,7 @@ from stable_diffusion import generate_image_from_sd, change_face_from_sd
 from flux import generate_image_from_flux
 
 load_dotenv()
-LoRA = ["nolora", "japan4"]
+LoRA = ["japan4"]
 
 app = FastAPI()
 app.add_middleware(
@@ -61,9 +61,15 @@ async def analyze_image(
             if colors.get("error"):
                 return { "error": colors.get("error") }
 
-        analysis_result = get_analysis_result(colors, img_pil)
-        outfit_prompt = get_outfit_prompt(analysis_result, img_pil, user_prompt)
         
+        if(user_prompt == ""):
+            analysis_result = get_analysis_result(colors, img_pil)
+        else:
+            analysis_result = ""
+
+        outfit_prompt = get_outfit_prompt(analysis_result, img_pil, user_prompt)
+        print(outfit_prompt)
+
         outfit_image = await generate_image_from_flux(outfit_prompt) \
                      + await generate_image_from_sd(outfit_prompt, LoRA)
         

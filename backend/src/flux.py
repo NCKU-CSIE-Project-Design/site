@@ -34,9 +34,7 @@ async def prompt_to_image(prompt):
     with open("docs/flux_config.json", "r") as f:
         workflow = json.load(f)
 
-    workflow_str = json.dumps(workflow)
-    workflow_str = workflow_str.replace("prompt_here", prompt)
-    workflow = json.loads(workflow_str)
+    workflow["28"]["inputs"]["string"] = prompt
 
     res = requests.post(f"{api_url}/prompt", json={"prompt": workflow})
     res_data = res.json()

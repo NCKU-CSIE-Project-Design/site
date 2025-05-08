@@ -36,6 +36,9 @@ export default function Home() {
 
     const startCamera = async (): Promise<void> => {
         try {
+            if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+                throw new Error('您的瀏覽器不支援相機功能');
+            }
             const stream = await navigator.mediaDevices.getUserMedia({
                 video: { facingMode: 'user' }
             });
@@ -496,7 +499,8 @@ export default function Home() {
                     setError={setError} 
                     setOutfitImage={setOutfitImage} 
                     selectedFile={selectedFile} 
-                    setResultMessage={setMessage} 
+                    setResultMessage={setMessage}
+                    setSelectedStyle={setSelectedStyle}
                 />
             </Box>
         </Container>

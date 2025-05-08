@@ -34,7 +34,6 @@ async def prompt_to_image(prompt):
     
     payload["prompt"] = prompt
     
-    print(payload)
     response = requests.post(URL, json=payload, headers={'Content-Type': 'application/json'})
     if response.status_code != 200:
         return {"error": f"prompt_to_image 請求失敗，狀態碼: {response.status_code}", "details": response}
