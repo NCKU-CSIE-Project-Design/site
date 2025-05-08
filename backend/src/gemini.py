@@ -7,9 +7,9 @@ model = genai.GenerativeModel('gemini-1.5-flash')
 def get_analysis_result(colors, face):
     analysis_prompt = f"""
     This is a personal color analysis of a person's photo:
-    - Hair color: {colors['頭髮']}
-    - Skin tone: {colors['膚色']}
-    - Lip color: {colors['嘴唇']}
+    - Hair color: {colors['hair']}
+    - Skin tone: {colors['skin']}
+    - Lip color: {colors['lips']}
 
     Please analyze the above color information from the perspective of a professional Korean personal color consultant:
     1. Determine the suitable personal color season

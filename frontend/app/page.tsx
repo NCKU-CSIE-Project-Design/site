@@ -31,13 +31,13 @@ export default function Home() {
     const [colorsChanged, setColorsChanged] = useState<boolean>(false);
     const [outfitImage, setOutfitImage] = useState<OutfitImages | null>(null);
     const [selectedStyle, setSelectedStyle] = useState<string | null>(null);
-    const [message, setMessage] = useState<string>("上傳照片或拍攝照片後的分析結果將顯示在此處");
+    const [message, setMessage] = useState<string>("Analysis results will be displayed here after uploading or taking a photo");
     const videoRef = useRef<HTMLVideoElement>(null);
 
     const startCamera = async (): Promise<void> => {
         try {
             if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-                throw new Error('您的瀏覽器不支援相機功能');
+                throw new Error('Your browser does not support camera functionality');
             }
             const stream = await navigator.mediaDevices.getUserMedia({
                 video: { facingMode: 'user' }
@@ -52,8 +52,8 @@ export default function Home() {
             }, 100);
 
         } catch (error) {
-            console.error('無法開啟相機:', error);
-            setError('無法開啟相機，請確認已授予相機權限');
+            console.error('Unable to open camera:', error);
+            setError('Unable to open camera, please confirm camera permissions have been granted');
         }
     };
 
@@ -97,7 +97,7 @@ export default function Home() {
             };
             reader.readAsDataURL(file);
         } else {
-            alert('請上傳圖片文件！');
+            alert('Please upload an image file!');
         }
     };
 
@@ -152,8 +152,8 @@ export default function Home() {
                 }
             }
         } catch (error) {
-            console.error('Error:', error);
-            setError('網路連線錯誤，請稍後再試！');
+            console.error('Network connection error, please try again later!', error);
+            setError('Network connection error, please try again later!');
         } finally {
             setLoading(false);
         }
@@ -178,7 +178,7 @@ export default function Home() {
 
     const handleReanalyze = async (): Promise<void> => {
         if (!selectedFile) {
-            setError('找不到圖片檔案');
+            setError('Image file not found');
             return;
         }
         setOutfitImage(null); 
@@ -197,11 +197,19 @@ export default function Home() {
             } else {
                 setResult(data.analysis);
                 setColors(data.colors);
-                setOutfitImage(data.image);
+                
+                const outfitImages: OutfitImages = {};
+                data.image.forEach((item: { style: string; image: string }) => {
+                    outfitImages[item.style] = item.image;
+                });
+                setOutfitImage(outfitImages);
+                if (data.image && data.image.length > 0) {
+                    setSelectedStyle(data.image[0].style);
+                }
             }
         } catch (error) {
-            console.error('Error:', error);
-            setError('網路連線錯誤，請稍後再試！');
+            console.error('Network connection error, please try again later!', error);
+            setError('Network connection error, please try again later!');
         } finally {
             setLoading(false);
             setColorsChanged(false);
@@ -229,10 +237,10 @@ export default function Home() {
         <Container maxWidth="lg">
             <Box sx={{ my: 4, textAlign: 'center' }}>
                 <Typography variant="h3" component="h1" color="primary" gutterBottom>
-                    韓式個人色彩分析
+                    Korean Personal Color Analysis
                 </Typography>
                 <Typography variant="h6" color="text.secondary" paragraph>
-                    上傳您的照片或拍攝照片，讓AI為您打造專屬的色彩建議
+                    Upload your photo or take a picture, and let AI create personalized color recommendations for you
                 </Typography>
             </Box>
 
@@ -244,7 +252,7 @@ export default function Home() {
                         onClick={() => !isCameraActive && document.getElementById('file-input')?.click()}
                     >
                         {preview ? (
-                            <PreviewImage src={preview} alt="預覽圖" />
+                            <PreviewImage src={preview} alt="Preview" />
                         ) : (
                             <>
                                 {isCameraActive && (
@@ -262,7 +270,7 @@ export default function Home() {
                                 {!isCameraActive && (
                                     <>
                                         <CloudUploadIcon sx={{ fontSize: 60, color: '#f8b195', mb: 2 }} />
-                                        <Typography>點擊或拖曳照片至此處</Typography>
+                                        <Typography>Click or drag photos here</Typography>
                                     </>
                                 )}
                             </>
@@ -282,7 +290,7 @@ export default function Home() {
                                 fullWidth
                                 onClick={resetUpload}
                             >
-                                重新上傳
+                                Reset Upload
                             </Button>
                         )}
                         {!isCameraActive ? (
@@ -292,7 +300,7 @@ export default function Home() {
                                 startIcon={<CameraAltIcon />}
                                 onClick={startCamera}
                             >
-                                開啟相機
+                                Open Camera
                             </Button>
                         ) : (
                             !preview && (
@@ -303,7 +311,7 @@ export default function Home() {
                                         color="secondary"
                                         onClick={takePhoto}
                                     >
-                                        拍照
+                                        Take Photo
                                     </Button>
                                     <Button
                                         variant="outlined"
@@ -311,7 +319,7 @@ export default function Home() {
                                         color="error"
                                         onClick={stopCamera}
                                     >
-                                        關閉相機
+                                        Close Camera
                                     </Button>
                                 </>
                             )
@@ -322,13 +330,13 @@ export default function Home() {
                             disabled={!selectedFile || loading}
                             onClick={handleAnalyze}
                         >
-                            開始分析
+                            Start Analysis
                         </Button>
                     </Stack>
                     {outfitImage && selectedStyle && (
                         <Box sx={{ mt: 4, textAlign: 'center' }}>
                             <Typography variant="h6" gutterBottom>
-                                推薦穿搭
+                                Recommended Outfit
                             </Typography>
                             <Box sx={{ mb: 2, display: 'flex', gap: 1, flexWrap: 'wrap', justifyContent: 'center' }}>
                                 {Object.keys(outfitImage).map((style) => (
@@ -353,7 +361,7 @@ export default function Home() {
                             >
                                 <Image
                                     src={`data:image/png;base64,${outfitImage[selectedStyle]}`}
-                                    alt={`${selectedStyle}穿搭`}
+                                    alt={`${selectedStyle} Outfit`}
                                     width={500}
                                     height={500}
                                     style={{
@@ -418,7 +426,7 @@ export default function Home() {
                     {loading ? (
                         <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', mt: 8 }}>
                             <CircularProgress />
-                            <Typography sx={{ mt: 2 }}>分析中，請稍候...</Typography>
+                            <Typography sx={{ mt: 2 }}>Analyzing, please wait...</Typography>
                         </Box>
                     ) : error ? (
                         <Box sx={{
@@ -429,7 +437,7 @@ export default function Home() {
                             color: 'error.main'
                         }}>
                             <Typography variant="h6" gutterBottom>
-                                錯誤提示
+                                Error提示
                             </Typography>
                             <Typography>
                                 {error}
@@ -439,8 +447,8 @@ export default function Home() {
                         <>
                             {colors && (
                                 <Box sx={{ mb: 3, p: 2, bgcolor: 'grey.50', borderRadius: 1 }}>
-                                    <Typography variant="h6" gutterBottom>偵測到的顏色：</Typography>
-                                    {['頭髮', '膚色', '嘴唇'].map((part) => (
+                                    <Typography variant="h6" gutterBottom>Detected Colors:</Typography>
+                                    {['hair', 'skin', 'lips'].map((part) => (
                                         <ColorDisplay key={part}>
                                             <Box className="color-box" sx={{ bgcolor: (customColors || colors)[part] }}>
                                                 <Button
@@ -476,7 +484,7 @@ export default function Home() {
                                             onClick={handleReanalyze}
                                             sx={{ mt: 2 }}
                                         >
-                                            重新分析
+                                            Reanalyze
                                         </Button>
                                     )}
                                 </Box>

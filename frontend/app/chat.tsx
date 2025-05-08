@@ -50,7 +50,7 @@ export default function ChatWidget({
 
     useEffect(() => {
         let interval: NodeJS.Timeout;
-        if (chatHistory.length > 0 && chatHistory[chatHistory.length - 1].content.startsWith('生成中')) {
+        if (chatHistory.length > 0 && chatHistory[chatHistory.length - 1].content.startsWith('Generating')) {
             interval = setInterval(() => {
                 setLoadingDots(prev => {
                     const newDots = prev === '...' ? '' : 
@@ -60,7 +60,7 @@ export default function ChatWidget({
                         const newHistory = [...prevHistory];
                         newHistory[newHistory.length - 1] = {
                             role: 'assistant',
-                            content: `生成中${newDots}`
+                            content: `Generating${newDots}`
                         };
                         return newHistory;
                     });
@@ -81,7 +81,7 @@ export default function ChatWidget({
         if(!chatmessage.trim()) {
             setChatHistory((prevHistory) => [
                 ...prevHistory,
-                { role: 'assistant', content: '請輸入文字' },
+                { role: 'assistant', content: 'Please enter text' },
             ]);
             return;
         }
@@ -95,7 +95,7 @@ export default function ChatWidget({
         if (!selectedFile) {
             setChatHistory((prevHistory) => [
                 ...prevHistory,
-                { role: 'assistant', content: '請先上傳圖片' },
+                { role: 'assistant', content: 'Please upload an image first' },
             ]);
             return;
         }
@@ -109,7 +109,7 @@ export default function ChatWidget({
 
             setChatHistory((prevHistory) => [
                 ...prevHistory,
-                { role: 'assistant', content: `生成中${loadingDots}` },
+                { role: 'assistant', content: `Generating${loadingDots}` },
             ]);
 
             try {
@@ -132,12 +132,12 @@ export default function ChatWidget({
                     }
                     setChatHistory((prevHistory) => [
                         ...prevHistory,
-                        { role: 'assistant', content: '生成完畢' },
+                        { role: 'assistant', content: 'Generation complete' },
                     ]);
-                    setResultMessage('您的個人化穿搭已顯示在左側');
+                    setResultMessage('Your personalized outfit is displayed on the left');
                 }
             } catch (error) {
-                console.error("上傳失敗:", error);
+                console.error("Upload failed:", error);
             }
         }
     };
@@ -159,7 +159,7 @@ export default function ChatWidget({
             <Slide direction="left" in={open} mountOnEnter unmountOnExit>
                 <StyledChatPaper>
                     <StyledChatHeader>
-                        <StyledHeaderText variant="h6">AI穿搭助手</StyledHeaderText>
+                        <StyledHeaderText variant="h6">AI Outfit Assistant</StyledHeaderText>
                         <StyledCloseButton size="small" onClick={toggleChat}>
                             <CloseIcon />
                         </StyledCloseButton>
@@ -183,7 +183,7 @@ export default function ChatWidget({
                         <TextField
                             fullWidth
                             variant="outlined"
-                            placeholder="請輸入想要改變的穿搭..."
+                            placeholder="Enter the outfit style you want to change..."
                             value={chatmessage}
                             onChange={(e) => setchatMessage(e.target.value)}
                             onKeyDown={handleKeyDown}

@@ -96,5 +96,5 @@ if __name__ == "__main__":
             reload=True
         )
     except Exception as e:
-        print(f"啟動失敗: {e}")
+        print(f"Startup failed: {e}")
 

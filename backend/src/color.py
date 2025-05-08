@@ -43,32 +43,32 @@ def get_skin_color(img, face):
     return rgb_to_hex(dominant_color)
 
 def get_lip_color(img, landmarks):
-    # 創建一個與原圖相同大小的遮罩（初始為全黑）
+    # Create a mask of the same size as the original image (initially all black)
     mask = np.zeros(img.shape[:2], dtype=np.uint8)
     
-    # 獲取外嘴唇輪廓點（不考慮內嘴唇）
+    # Get outer lip contour points (excluding inner lip)
     outer_lip = []
     for i in range(48, 60):
         outer_lip.append([landmarks.part(i).x, landmarks.part(i).y])
     
-    # 轉換為 numpy 陣列
+    # Convert to numpy array
     outer_lip = np.array([outer_lip], dtype=np.int32)
     cv2.fillPoly(mask, outer_lip, 255)
 
-    # 獲取嘴唇的邊界框，用於提取 ROI
+    # Get lip bounding box for ROI extraction
     x_coords = outer_lip[0][:, 0]
     y_coords = outer_lip[0][:, 1]
     x1, x2 = min(x_coords), max(x_coords)
     y1, y2 = min(y_coords), max(y_coords)
 
-    # 提取 ROI（嘴唇區域）
-    padding = 5  # 可根據需要調整
+    # Extract ROI (lip region)
+    padding = 5  # Adjust as needed
     roi = img[max(0, y1-padding):min(img.shape[0], y2+padding),
               max(0, x1-padding):min(img.shape[1], x2+padding)]
     mask_roi = mask[max(0, y1-padding):min(img.shape[0], y2+padding),
                     max(0, x1-padding):min(img.shape[1], x2+padding)]
 
-    # 獲取嘴唇的主要顏色
+    # Get main lip color
     dominant_color = get_dominant_color(roi, mask_roi)
     
     return rgb_to_hex(dominant_color)
@@ -119,37 +119,37 @@ def get_color(filepath):
     with open(filepath, "rb") as f:
         contents = f.read()
 
-    # 使用OpenCV讀取圖片進行顏色分析
+    # Use OpenCV to read image for color analysis
     img_cv = cv2.imdecode(np.frombuffer(contents, np.uint8), cv2.IMREAD_COLOR)
     img_cv = cv2.cvtColor(img_cv, cv2.COLOR_BGR2RGB)
     
-    # 初始化人臉檢測器和特徵點檢測器
+    # Initialize face detector and landmark detector
     detector = dlib.get_frontal_face_detector()
     predictor = dlib.shape_predictor('docs/shape_predictor_68_face_landmarks.dat')
     
-    # 檢測人臉
+    # Detect faces
     faces = detector(img_cv)
     if len(faces) == 0:
         return {
-            "error": "無法偵測到人臉，請上傳一張正面且清晰的人臉照片。"
+            "error": "Unable to detect face, please upload a clear front-facing face photo."
         }
     
     face = faces[0]
     landmarks = predictor(img_cv, face)
     
-    # 分析顏色（加入錯誤檢查）
+    # Analyze colors (add error checking)
     try:
         colors = {
-            '頭髮': get_hair_color(img_cv, face),
-            '膚色': get_skin_color(img_cv, face),
-            '嘴唇': get_lip_color(img_cv, landmarks)
+            'hair': get_hair_color(img_cv, face),
+            'skin': get_skin_color(img_cv, face),
+            'lips': get_lip_color(img_cv, landmarks)
         }
     except Exception as e:
         return {
-            "error": "無法正確分析臉部特徵，請確保照片中的臉部清晰可見。"
+            "error": "Unable to correctly analyze facial features, please ensure the face is clearly visible in the photo."
         }
     
-    # 生成視覺化圖片
+    # Generate visual image
 
     if not os.path.exists(COLOR_DIR):
         os.makedirs(COLOR_DIR)

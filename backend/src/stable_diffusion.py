@@ -36,7 +36,7 @@ async def prompt_to_image(prompt):
     
     response = requests.post(URL, json=payload, headers={'Content-Type': 'application/json'})
     if response.status_code != 200:
-        return {"error": f"prompt_to_image 請求失敗，狀態碼: {response.status_code}", "details": response}
+        return {"error": f"prompt_to_image request failed, status code: {response.status_code}", "details": response}
     data = response.json()
     image = data["images"][0]
 
@@ -67,7 +67,7 @@ async def change_face(image, face):
 
         response = requests.post(URL, json=payload, headers={'Content-Type': 'application/json'})
         if response.status_code != 200:
-            print(f"change_face 請求失敗，狀態碼: {response.status_code}, details: {response}")
+            print(f"change_face request failed, status code: {response.status_code}, details: {response}")
             return None
         data = response.json()
         
@@ -75,6 +75,6 @@ async def change_face(image, face):
 
         return image
     except Exception as e:
-        print(f"請求或解碼時發生錯誤: {str(e)}")
+        print(f"Error occurred during request or decoding: {str(e)}")
         return None
     

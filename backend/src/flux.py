@@ -40,12 +40,12 @@ async def prompt_to_image(prompt):
     res_data = res.json()
     prompt_id = res_data["prompt_id"]
 
-    print(f"🟡 任務已送出，Prompt ID: {prompt_id}")
+    print(f"🟡 Task submitted, Prompt ID: {prompt_id}")
 
     while True:
         queue = requests.get(f"{api_url}/queue").json()
         if not queue["queue_pending"] and not queue["queue_running"]:
-            print("✅ 任務完成！")
+            print("✅ Task completed!")
             break
         time.sleep(1)
 
@@ -53,16 +53,16 @@ async def prompt_to_image(prompt):
     import re
     matches = re.findall(r'href="([^"]+\.png)"', image_list)
     if not matches:
-        print("⚠️ 找不到圖片。")
+        print("⚠️ Image not found.")
         return None
 
     latest_image = matches[-1]
     image_url = f"{http_output_url}/{latest_image}"
-    print(f"🖼️ 找到圖片：{image_url}")
+    print(f"🖼️ Image found: {image_url}")
 
     res = requests.get(image_url)
     if res.status_code != 200:
-        print("⚠️ 下載圖片失敗")
+        print("⚠️ Failed to download image")
         return None
         
     image_data = res.content
