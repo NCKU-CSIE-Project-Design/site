@@ -1,22 +1,17 @@
-'use client';
-
-import { Geist, Geist_Mono } from "next/font/google";
-import { ThemeProvider, createTheme } from '@mui/material/styles';
-import CssBaseline from '@mui/material/CssBaseline';
-import { AppRouterCacheProvider } from '@mui/material-nextjs/v14-appRouter';
+import React from 'react';
 import "./globals.css";
+import type { Metadata } from "next";
+import ClientLayout from './ClientLayout';
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
+export const metadata: Metadata = {
+  title: "Korean Personal Color Analysis",
+  description: "Upload your photo or take a picture, and let AI create personalized color recommendations for you",
+  icons: {
+    icon: '/favicon.ico'
+  },
+};
 
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
-
-const theme = createTheme({
+export const themeConfig = {
   palette: {
     primary: {
       main: '#f67280',
@@ -31,24 +26,13 @@ const theme = createTheme({
   typography: {
     fontFamily: '"Noto Sans TC", sans-serif',
   },
-});
+}; 
 
-export default function RootLayout({
-  children,
-}: Readonly<{
-  children: React.ReactNode;
-}>) {
+export default function RootLayout({children,}: Readonly<{ children: React.ReactNode; }>) {
   return (
-    <html lang="zh-TW">
-      <body
-        className={`${geistSans.variable} ${geistMono.variable}`}
-      >
-        <AppRouterCacheProvider>
-          <ThemeProvider theme={theme}>
-            <CssBaseline />
-            {children}
-          </ThemeProvider>
-        </AppRouterCacheProvider>
+    <html lang="en">
+      <body className="antialiased">
+        <ClientLayout themeConfig={themeConfig}>{children}</ClientLayout>
       </body>
     </html>
   );
