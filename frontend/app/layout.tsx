@@ -13,7 +13,7 @@ export const metadata: Metadata = {
   },
 };
 
-export const themeConfig = {
+const themeConfig = {
   palette: {
     primary: {
       main: '#f67280',
@@ -28,7 +28,7 @@ export const themeConfig = {
   typography: {
     fontFamily: '"Noto Sans TC", sans-serif',
   },
-}; 
+};
 
 export default function RootLayout({children,}: Readonly<{ children: React.ReactNode; }>) {
   return (
