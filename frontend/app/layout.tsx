@@ -2,7 +2,7 @@ import React from 'react';
 import "./globals.css";
 import type { Metadata } from "next";
 import ClientLayout from './ClientLayout';
-import { GoogleAnalytics } from '@next/third-parties/google';
+import { GoogleAnalytics, GoogleTagManager } from '@next/third-parties/google';
 import MicrosoftClarity from './MicrosoftClarity';
 
 export const metadata: Metadata = {
@@ -33,10 +33,9 @@ const themeConfig = {
 export default function RootLayout({children,}: Readonly<{ children: React.ReactNode; }>) {
   return (
     <html lang="en">
-      <head>
-        <GoogleAnalytics gaId="G-L6XX689XJQ" />
-        <MicrosoftClarity clarityId="rgbmrq1m4h" />
-      </head>
+      <GoogleAnalytics gaId="G-L6XX689XJQ" />
+      <GoogleTagManager gtmId="GTM-PRLL7MHX" />
+      <MicrosoftClarity clarityId="rgbmrq1m4h" />
       <body className="antialiased">
         <ClientLayout themeConfig={themeConfig}>{children}</ClientLayout>
       </body>
