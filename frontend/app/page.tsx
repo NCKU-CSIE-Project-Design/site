@@ -10,9 +10,7 @@ import remarkGfm from 'remark-gfm';
 import { UploadBox, HiddenInput, PreviewImage, MarkdownContainer, ColorDisplay} from '../styles/App';
 import ChatWidget from './chat';
 import Image from 'next/image';
-import Clarity from '@microsoft/clarity';
 
-const projectId = "rgbmrq1m4h"
 
 interface Colors {
     [key: string]: string;
@@ -37,9 +35,7 @@ export default function Home() {
     const [message, setMessage] = useState<string>("Analysis results will be displayed here after uploading or taking a photo");
     const videoRef = useRef<HTMLVideoElement>(null);
 
-    useEffect(() => {
-        Clarity.init(projectId);
-    }, []);
+    
 
     const startCamera = async (): Promise<void> => {
         try {
