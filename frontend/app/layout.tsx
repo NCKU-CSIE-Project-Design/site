@@ -4,7 +4,7 @@ import type { Metadata } from "next";
 import ClientLayout from './ClientLayout';
 
 export const metadata: Metadata = {
-  title: "Korean Personal Color Analysis",
+  title: "Korean Personal Color Analytics",
   description: "Upload your photo or take a picture, and let AI create personalized color recommendations for you",
   icons: {
     icon: '/favicon.ico'

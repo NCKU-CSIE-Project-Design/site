@@ -1,4 +1,4 @@
-# Korean Personal Color Analysis
+# Korean Personal Color Analytics
 
 A web application for analyzing personal colors using AI.
 

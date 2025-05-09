@@ -244,7 +244,7 @@ export default function Home() {
         <Container maxWidth="lg">
             <Box sx={{ my: 4, textAlign: 'center' }}>
                 <Typography variant="h3" component="h1" color="primary" gutterBottom>
-                    Korean Personal Color Analysis
+                    Korean Personal Color Analytics
                 </Typography>
                 <Typography variant="h6" color="text.secondary" paragraph>
                     Upload your photo or take a picture, and let AI create personalized color recommendations for you
