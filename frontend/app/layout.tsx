@@ -1,9 +1,9 @@
 import React from 'react';
 import "./globals.css";
 import type { Metadata } from "next";
-import ClientLayout from './ClientLayout';
+import ClientLayout from './components/ClientLayout';
 import { GoogleTagManager } from '@next/third-parties/google';
-import MicrosoftClarity from './MicrosoftClarity';
+import MicrosoftClarity from './components/MicrosoftClarity';
 
 export const metadata: Metadata = {
   title: "Korean Personal Color Analytics",
