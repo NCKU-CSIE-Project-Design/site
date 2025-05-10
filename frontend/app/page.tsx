@@ -7,6 +7,7 @@ import CameraAltIcon from '@mui/icons-material/CameraAlt';
 import ColorizeIcon from '@mui/icons-material/Colorize';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
+import axios from 'axios';
 import { UploadBox, HiddenInput, PreviewImage, MarkdownContainer, ColorDisplay} from '../styles/App';
 import ChatWidget from './chat';
 import Image from 'next/image';
@@ -131,28 +132,19 @@ export default function Home() {
         formData.append('image', selectedFile);
 
         try {
-            const response = await fetch(`https://api.coloranalysis.fun/analyze`, {
-                method: 'POST',
-                body: formData
-            });
-
-            const data = await response.json();
+            const { data } = await axios.post(`https://api.coloranalysis.fun/analyze`, formData);
             console.log(data)
             
-            if (data.error) {
-                setError(data.error);
-            } else {
-                setResult(data.analysis);
-                setColors(data.colors);
+            setResult(data.analysis);
+            setColors(data.colors);
 
-                const outfitImages: OutfitImages = {};
-                data.image.forEach((item: { style: string; image: string }) => {
-                    outfitImages[item.style] = item.image;
-                });
-                setOutfitImage(outfitImages);
-                if (data.image && data.image.length > 0) {
-                    setSelectedStyle(data.image[0].style);
-                }
+            const outfitImages: OutfitImages = {};
+            data.image.forEach((item: { style: string; image: string }) => {
+                outfitImages[item.style] = item.image;
+            });
+            setOutfitImage(outfitImages);
+            if (data.image && data.image.length > 0) {
+                setSelectedStyle(data.image[0].style);
             }
         } catch (error) {
             console.error('Network connection error, please try again later!', error);
@@ -190,25 +182,18 @@ export default function Home() {
         formData.append('colors', JSON.stringify(customColors));
         setLoading(true);
         try {
-            const response = await fetch(`https://api.coloranalysis.fun/analyze`, {
-                method: 'POST',
-                body: formData
+            const { data } = await axios.post(`https://api.coloranalysis.fun/analyze`, formData);
+            
+            setResult(data.analysis);
+            setColors(data.colors);
+            
+            const outfitImages: OutfitImages = {};
+            data.image.forEach((item: { style: string; image: string }) => {
+                outfitImages[item.style] = item.image;
             });
-            const data = await response.json();
-            if (data.error) {
-                setError(data.error);
-            } else {
-                setResult(data.analysis);
-                setColors(data.colors);
-                
-                const outfitImages: OutfitImages = {};
-                data.image.forEach((item: { style: string; image: string }) => {
-                    outfitImages[item.style] = item.image;
-                });
-                setOutfitImage(outfitImages);
-                if (data.image && data.image.length > 0) {
-                    setSelectedStyle(data.image[0].style);
-                }
+            setOutfitImage(outfitImages);
+            if (data.image && data.image.length > 0) {
+                setSelectedStyle(data.image[0].style);
             }
         } catch (error) {
             console.error('Network connection error, please try again later!', error);

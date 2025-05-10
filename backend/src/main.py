@@ -75,6 +75,8 @@ async def analyze_image(
         
         outfit_image_changed_face = await change_face_from_sd(outfit_image, face)
         
+        print("Finish Generation!")
+        
         return {
             "analysis": analysis_result,
             "colors": colors,
