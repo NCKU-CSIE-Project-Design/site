@@ -2,6 +2,10 @@ import requests
 import json
 import time
 import base64
+import os
+
+FLUX_API_ADDRESS = os.getenv('FLUX_API_ADDRESS')
+FLUX_OUTPUT_API_ADDRESS = os.getenv('FLUX_OUTPUT_API_ADDRESS')
 
 async def get_error_img():
     with open("static/error.jpg", "rb") as image_file:
@@ -27,29 +31,25 @@ async def generate_image_from_flux(prompt):
 
 
 async def prompt_to_image(prompt):
-    server_ip = "140.116.154.71"
-    api_url = f"http://{server_ip}:7862"
-    http_output_url = f"http://{server_ip}:8000"
-
     with open("docs/flux_config.json", "r") as f:
         workflow = json.load(f)
 
     workflow["28"]["inputs"]["string"] = prompt
 
-    res = requests.post(f"{api_url}/prompt", json={"prompt": workflow})
+    res = requests.post(f"{FLUX_API_ADDRESS}/prompt", json={"prompt": workflow})
     res_data = res.json()
     prompt_id = res_data["prompt_id"]
 
     print(f"🟡 Task submitted, Prompt ID: {prompt_id}")
 
     while True:
-        queue = requests.get(f"{api_url}/queue").json()
+        queue = requests.get(f"{FLUX_API_ADDRESS}/queue").json()
         if not queue["queue_pending"] and not queue["queue_running"]:
             print("✅ Task completed!")
             break
         time.sleep(1)
 
-    image_list = requests.get(http_output_url).text
+    image_list = requests.get(FLUX_OUTPUT_API_ADDRESS).text
     import re
     matches = re.findall(r'href="([^"]+\.png)"', image_list)
     if not matches:
@@ -57,7 +57,7 @@ async def prompt_to_image(prompt):
         return None
 
     latest_image = matches[-1]
-    image_url = f"{http_output_url}/{latest_image}"
+    image_url = f"{FLUX_OUTPUT_API_ADDRESS}/{latest_image}"
     print(f"🖼️ Image found: {image_url}")
 
     res = requests.get(image_url)

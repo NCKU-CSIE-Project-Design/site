@@ -1,4 +1,6 @@
-import requests, base64, json
+import requests, base64, json, os
+
+SD_API_ADDRESS = os.getenv('SD_API_ADDRESS')
 
 async def get_error_img():
     with open("static/error.jpg", "rb") as image_file:
@@ -27,7 +29,7 @@ async def generate_image_from_sd(prompt, LoRA):
     return results
 
 async def prompt_to_image(prompt):
-    URL = "http://140.116.154.71:7860/sdapi/v1/txt2img"
+    URL = f"{SD_API_ADDRESS}/sdapi/v1/txt2img"
     
     with open("docs/sd_config.json", "r") as f:
         payload = json.load(f)
@@ -57,7 +59,7 @@ async def change_face_from_sd(images, face):
 
 async def change_face(image, face):
     try:
-        URL = "http://140.116.154.71:7860/roop/image" 
+        URL = f"{SD_API_ADDRESS}/roop/image" 
         
         with open("docs/roop_config.json", "r") as f:
             payload = json.load(f)
