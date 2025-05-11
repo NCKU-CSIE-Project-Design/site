@@ -1,9 +1,21 @@
 import React from 'react';
-import "./globals.css";
 import type { Metadata } from "next";
 import ClientLayout from './components/ClientLayout';
 import { GoogleTagManager } from '@next/third-parties/google';
 import MicrosoftClarity from './components/MicrosoftClarity';
+import { Geist, Geist_Mono } from "next/font/google";
+
+
+const geistSans = Geist({
+  variable: "--font-geist-sans",
+  subsets: ["latin"],
+});
+
+const geistMono = Geist_Mono({
+  variable: "--font-geist-mono",
+  subsets: ["latin"],
+});
+
 
 export const metadata: Metadata = {
   title: "Korean Personal Color Analytics",
@@ -26,7 +38,7 @@ const themeConfig = {
     },
   },
   typography: {
-    fontFamily: '"Noto Sans TC", sans-serif',
+    fontFamily: 'var(--font-geist-sans)',
   },
 };
 
@@ -36,7 +48,7 @@ export default function RootLayout({children,}: Readonly<{ children: React.React
       <GoogleTagManager gtmId="GTM-PRLL7MHX" />
       <MicrosoftClarity clarityId="rgbmrq1m4h" />
 
-      <body className="antialiased">
+      <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
         <ClientLayout themeConfig={themeConfig}>{children}</ClientLayout>
       </body>
     </html>
