@@ -36,7 +36,9 @@ export default function Home() {
     const [message, setMessage] = useState<string>("Analysis results will be displayed here after uploading or taking a photo");
     const videoRef = useRef<HTMLVideoElement>(null);
 
-    
+    const [isAnalyzing, setIsAnalyzing] = useState(true);
+    const [textAnalysisDone, setTextAnalysisDone] = useState(true);
+    const [imageAnalysisDone, setImageAnalysisDone] = useState(true);
 
     const startCamera = async (): Promise<void> => {
         try {
@@ -118,42 +120,88 @@ export default function Home() {
         }
     };
 
-    const handleAnalyze = async (): Promise<void> => {
+    const handleAnalyze = (): void => {
         if (!selectedFile) return;
-
+        
+        // 重設所有狀態
         setLoading(true);
         setResult('');
         setError('');
         setColors(null);
         setOutfitImage(null);
         setSelectedStyle(null);
-
-        const formData = new FormData();
-        formData.append('image', selectedFile);
-
-        try {
-            const { data: textAnalysisData } = await axios.post(`https://api.coloranalysis.fun/analyze/text`, formData);
-            console.log(textAnalysisData)
-            
-            setResult(textAnalysisData.analysis);
-            setColors(textAnalysisData.colors);
-
-            const { data: imageAnalysisData } = await axios.post(`https://api.coloranalysis.fun/analyze/image`, formData);
-            console.log(imageAnalysisData)
-
-            const outfitImages: OutfitImages = {};
-            imageAnalysisData.image.forEach((item: { style: string; image: string }) => {
-                outfitImages[item.style] = item.image;
-            });
-            setOutfitImage(outfitImages);
-            setSelectedStyle(imageAnalysisData.image[0].style); // choose the first one as default
-        } catch (error) {
-            console.error('Network connection error, please try again later!', error);
-            setError('Network connection error, please try again later!');
-        } finally {
-            setLoading(false);
-        }
+        
+        // 設置分析狀態為 true，觸發 useEffect
+        setIsAnalyzing(true);
+        setTextAnalysisDone(false);
     };
+    
+    // 當 isAnalyzing 變為 true 時，執行文字分析
+    useEffect(() => {
+        const runTextAnalysis = async () => {
+            if (!isAnalyzing || textAnalysisDone || !selectedFile) return;
+            
+            const formData = new FormData();
+            formData.append('image', selectedFile);
+            
+            try {
+                const { data } = await axios.post(`https://api.coloranalysis.fun/analyze/text`, formData);
+                console.log(data);
+                
+                // 立即更新狀態和渲染
+                setResult(data.analysis);
+                setColors(data.colors);
+            } catch (error) {
+                console.error(error);
+                setError(error instanceof Error ? error.message : 'Unknown Error');
+            } finally {
+                setTextAnalysisDone(true);
+                setImageAnalysisDone(false);
+            }
+        };
+        
+        runTextAnalysis();
+    }, [isAnalyzing, textAnalysisDone, selectedFile]);
+    
+    // 當 isAnalyzing 變為 true 時，執行圖像分析
+    useEffect(() => {
+        const runImageAnalysis = async () => {
+            if (!isAnalyzing || imageAnalysisDone || !selectedFile) return;
+            
+            const formData = new FormData();
+            formData.append('image', selectedFile);
+            
+            try {
+                const { data } = await axios.post(`https://api.coloranalysis.fun/analyze/image`, formData);
+                console.log(data);
+                
+                const outfitImages: OutfitImages = {};
+                data.image.forEach((item: { style: string; image: string }) => {
+                    outfitImages[item.style] = item.image;
+                });
+                
+                // 立即更新狀態和渲染
+                setOutfitImage(outfitImages);
+                setSelectedStyle(data.image[0].style);
+            } catch (error) {
+                console.error(error);
+                setError(error instanceof Error ? error.message : 'Unknown Error');
+            } finally {
+                setImageAnalysisDone(true);
+                setLoading(false);
+            }
+        };
+        
+        runImageAnalysis();
+    }, [isAnalyzing, imageAnalysisDone, selectedFile]);
+    
+    // 當兩個分析都完成時，結束加載狀態
+    useEffect(() => {
+        if (textAnalysisDone && imageAnalysisDone) {
+            setLoading(false);
+            setIsAnalyzing(false);
+        }
+    }, [textAnalysisDone, imageAnalysisDone]);
 
     const handleColorChange = (part: string, newColor: string): void => {
         setCustomColors(prevColors => {
@@ -177,34 +225,20 @@ export default function Home() {
             setError('Image file not found');
             return;
         }
-        setOutfitImage(null); 
+
+        setLoading(true);
+        setResult('');
+        setError('');
+        setOutfitImage(null);
+        setSelectedStyle(null);
+        
         const formData = new FormData();
         formData.append('image', selectedFile);
         formData.append('colors', JSON.stringify(customColors));
-        setLoading(true);
-        try {
-            const { data: textAnalysisData } = await axios.post(`https://api.coloranalysis.fun/analyze/text`, formData);
-            console.log(textAnalysisData)
-            
-            setResult(textAnalysisData.analysis);
-            setColors(textAnalysisData.colors);
-
-            const { data: imageAnalysisData } = await axios.post(`https://api.coloranalysis.fun/analyze/image`, formData);
-            console.log(imageAnalysisData)
-
-            const outfitImages: OutfitImages = {};
-            imageAnalysisData.image.forEach((item: { style: string; image: string }) => {
-                outfitImages[item.style] = item.image;
-            });
-            setOutfitImage(outfitImages);
-            setSelectedStyle(imageAnalysisData.image[0].style); // choose the first one as default
-        } catch (error) {
-            console.error('Network connection error, please try again later!', error);
-            setError('Network connection error, please try again later!');
-        } finally {
-            setLoading(false);
-            setColorsChanged(false);
-        }
+        
+        
+        setIsAnalyzing(true);
+        setTextAnalysisDone(false);
     };
 
     const resetUpload = (): void => {
@@ -329,7 +363,12 @@ export default function Home() {
                             Start Analysis
                         </Button>
                     </Stack>
-                    {outfitImage && selectedStyle && (
+                    {loading ? (
+                        <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', mt: 8 }}>
+                            <CircularProgress />
+                            <Typography sx={{ mt: 2 }}>Analyzing, please wait...</Typography>
+                        </Box>
+                    ) : (outfitImage && selectedStyle && (
                         <Box sx={{ mt: 4, textAlign: 'center' }}>
                             <Typography variant="h6" gutterBottom>
                                 Recommended Outfit
@@ -415,16 +454,12 @@ export default function Home() {
                                 />
                             </Paper>
                         </Box>
-                    )}
+                    ))}
+                    
                 </Box>
 
                 <Paper sx={{ p: 3, height: '100%' }}>
-                    {loading ? (
-                        <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', mt: 8 }}>
-                            <CircularProgress />
-                            <Typography sx={{ mt: 2 }}>Analyzing, please wait...</Typography>
-                        </Box>
-                    ) : error ? (
+                    {error ? (
                         <Box sx={{
                             display: 'flex',
                             flexDirection: 'column',
