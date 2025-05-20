@@ -280,6 +280,7 @@ export default function Home() {
                                 variant="outlined"
                                 fullWidth
                                 onClick={resetUpload}
+                                sx={{ textTransform: 'none' }} 
                             >
                                 Reset Upload
                             </Button>
@@ -290,6 +291,7 @@ export default function Home() {
                                 fullWidth
                                 startIcon={<CameraAltIcon />}
                                 onClick={startCamera}
+                                sx={{ textTransform: 'none' }}
                             >
                                 Open Camera
                             </Button>
@@ -301,6 +303,7 @@ export default function Home() {
                                         fullWidth
                                         color="secondary"
                                         onClick={takePhoto}
+                                        sx={{ textTransform: 'none' }} 
                                     >
                                         Take Photo
                                     </Button>
@@ -309,6 +312,7 @@ export default function Home() {
                                         fullWidth
                                         color="error"
                                         onClick={stopCamera}
+                                        sx={{ textTransform: 'none' }} 
                                     >
                                         Close Camera
                                     </Button>
@@ -320,6 +324,7 @@ export default function Home() {
                             fullWidth
                             disabled={!selectedFile || loading}
                             onClick={handleAnalyze}
+                            sx={{ textTransform: 'none' }} 
                         >
                             Start Analysis
                         </Button>
@@ -473,7 +478,7 @@ export default function Home() {
                                             variant="contained"
                                             fullWidth
                                             onClick={handleReanalyze}
-                                            sx={{ mt: 2 }}
+                                            sx={{ mt: 2, textTransform: 'none' }}
                                         >
                                             Reanalyze
                                         </Button>
