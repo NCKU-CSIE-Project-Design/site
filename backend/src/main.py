@@ -16,7 +16,7 @@ from stable_diffusion import generate_image_from_sd, change_face_from_sd
 from flux import generate_image_from_flux
 
 load_dotenv()
-LoRA = ["japan4"]
+LoRA = ["preppy-000003"]
 
 app = FastAPI()
 app.add_middleware(
@@ -41,11 +41,10 @@ def save_image(contents):
 
     return filepath
     
-@app.post("/analyze")
-async def analyze_image(
+@app.post("/analyze/text")
+async def analyze_text(
     image: UploadFile = File(...),
-    colors: Optional[str] = Form(None),
-    user_prompt:str = Form("")
+    colors: Optional[str] = Form(None)
 ):
     try:
         contents = await image.read()
@@ -61,13 +60,29 @@ async def analyze_image(
             if colors.get("error"):
                 return { "error": colors.get("error") }
 
+        analysis_result = get_analysis_result(colors, img_pil)
         
-        if(user_prompt == ""):
-            analysis_result = get_analysis_result(colors, img_pil)
-        else:
-            analysis_result = ""
+        return {
+            "analysis": analysis_result,
+            "colors": colors
+        }
 
-        outfit_prompt = get_outfit_prompt(analysis_result, img_pil, user_prompt)
+    except Exception as e:
+        return {
+            "error": f"Error: {str(e)}"
+        }
+
+@app.post("/analyze/image")
+async def analyze_image(
+    image: UploadFile = File(...),
+    user_prompt:str = Form("")
+):
+    try:
+        contents = await image.read()
+        face = base64.b64encode(contents).decode()
+        img_pil = PIL.Image.open(io.BytesIO(contents))
+        
+        outfit_prompt = get_outfit_prompt(img_pil, user_prompt)
         print(outfit_prompt)
 
         outfit_image = await generate_image_from_flux(outfit_prompt) \
@@ -75,19 +90,15 @@ async def analyze_image(
         
         outfit_image_changed_face = await change_face_from_sd(outfit_image, face)
         
-        print("Finish Generation!")
-        
         return {
-            "analysis": analysis_result,
-            "colors": colors,
             "image": outfit_image_changed_face
         }
 
     except Exception as e:
         return {
-            "error": f"Error：{str(e)}"
+            "error": f"Error: {str(e)}"
         }
-
+    
 if __name__ == "__main__":
     import uvicorn
     try:

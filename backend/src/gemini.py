@@ -39,7 +39,7 @@ def get_glasses(face):
     glasses_response = model.generate_content([glasses_prompt, face]).text
     return glasses_response
 
-def get_outfit_prompt(analysis_result, face, user_prompt):
+def get_outfit_prompt(face, user_prompt):
     outfit_prompt = f"""
     Analyze the image to determine the suitable outfit for this person and convert this outfit into a prompt for stable diffusion. Use keywords and phrases, separated by commas. Include:
 

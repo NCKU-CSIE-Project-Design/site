@@ -132,20 +132,21 @@ export default function Home() {
         formData.append('image', selectedFile);
 
         try {
-            const { data } = await axios.post(`https://api.coloranalysis.fun/analyze`, formData);
-            console.log(data)
+            const { data: textAnalysisData } = await axios.post(`https://api.coloranalysis.fun/analyze/text`, formData);
+            console.log(textAnalysisData)
             
-            setResult(data.analysis);
-            setColors(data.colors);
+            setResult(textAnalysisData.analysis);
+            setColors(textAnalysisData.colors);
+
+            const { data: imageAnalysisData } = await axios.post(`https://api.coloranalysis.fun/analyze/image`, formData);
+            console.log(imageAnalysisData)
 
             const outfitImages: OutfitImages = {};
-            data.image.forEach((item: { style: string; image: string }) => {
+            imageAnalysisData.image.forEach((item: { style: string; image: string }) => {
                 outfitImages[item.style] = item.image;
             });
             setOutfitImage(outfitImages);
-            if (data.image && data.image.length > 0) {
-                setSelectedStyle(data.image[0].style);
-            }
+            setSelectedStyle(imageAnalysisData.image[0].style); // choose the first one as default
         } catch (error) {
             console.error('Network connection error, please try again later!', error);
             setError('Network connection error, please try again later!');
@@ -182,19 +183,21 @@ export default function Home() {
         formData.append('colors', JSON.stringify(customColors));
         setLoading(true);
         try {
-            const { data } = await axios.post(`https://api.coloranalysis.fun/analyze`, formData);
+            const { data: textAnalysisData } = await axios.post(`https://api.coloranalysis.fun/analyze/text`, formData);
+            console.log(textAnalysisData)
             
-            setResult(data.analysis);
-            setColors(data.colors);
-            
+            setResult(textAnalysisData.analysis);
+            setColors(textAnalysisData.colors);
+
+            const { data: imageAnalysisData } = await axios.post(`https://api.coloranalysis.fun/analyze/image`, formData);
+            console.log(imageAnalysisData)
+
             const outfitImages: OutfitImages = {};
-            data.image.forEach((item: { style: string; image: string }) => {
+            imageAnalysisData.image.forEach((item: { style: string; image: string }) => {
                 outfitImages[item.style] = item.image;
             });
             setOutfitImage(outfitImages);
-            if (data.image && data.image.length > 0) {
-                setSelectedStyle(data.image[0].style);
-            }
+            setSelectedStyle(imageAnalysisData.image[0].style); // choose the first one as default
         } catch (error) {
             console.error('Network connection error, please try again later!', error);
             setError('Network connection error, please try again later!');

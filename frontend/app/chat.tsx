@@ -18,6 +18,8 @@ import {
     textFieldStyles,
     sendButtonStyles
 } from '../styles/chat';
+import axios from 'axios';
+
 
 interface OutfitImages {
     [key: string]: string;
@@ -113,29 +115,21 @@ export default function ChatWidget({
             ]);
 
             try {
-                const response = await fetch("https://api.coloranalysis.fun/analyze", {
-                    method: "POST",
-                    body: formData,
-                });
-                const data = await response.json();
+                const { data: imageAnalysisData } = await axios.post(`https://api.coloranalysis.fun/analyze/image`, formData);
+                console.log(imageAnalysisData)
 
-                if (data.error) {
-                    setError(data.error);
-                } else {
-                    const outfitImages: OutfitImages = {};
-                    data.image.forEach((item: { style: string; image: string }) => {
-                        outfitImages[item.style] = item.image;
-                    });
-                    setOutfitImage(outfitImages);
-                    if (data.image && data.image.length > 0) {
-                        setSelectedStyle(data.image[0].style);
-                    }
-                    setChatHistory((prevHistory) => [
-                        ...prevHistory,
-                        { role: 'assistant', content: 'Generation complete' },
-                    ]);
-                    setResultMessage('Your personalized outfit is displayed on the left');
-                }
+                const outfitImages: OutfitImages = {};
+                imageAnalysisData.image.forEach((item: { style: string; image: string }) => {
+                    outfitImages[item.style] = item.image;
+                });
+                setOutfitImage(outfitImages);
+                setSelectedStyle(imageAnalysisData.image[0].style); // choose the first one as default
+
+                setChatHistory((prevHistory) => [
+                    ...prevHistory,
+                    { role: 'assistant', content: 'Generation complete' },
+                ]);
+                setResultMessage('Your personalized outfit is displayed on the left');
             } catch (error) {
                 console.error("Upload failed:", error);
             }

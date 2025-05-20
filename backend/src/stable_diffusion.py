@@ -15,7 +15,7 @@ async def generate_image_from_sd(prompt, LoRA):
         if lora == "nolora":
             image = await prompt_to_image(prompt)
         else:
-            image = await prompt_to_image(prompt + f" , <lora:{lora}:1>")
+            image = await prompt_to_image(prompt + f", {lora}, <lora:{lora}:1>")
 
         if image == None:
             image = get_error_img()
