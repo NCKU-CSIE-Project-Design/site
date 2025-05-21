@@ -35,7 +35,7 @@ export default function Home() {
     const [selectedStyle, setSelectedStyle] = useState<string | null>(null);
     const [message, setMessage] = useState<string>("Analysis results will be displayed here after uploading or taking a photo");
     const videoRef = useRef<HTMLVideoElement>(null);
-    const [userPrompt, setUserPrompt] = useState<string>('');
+    const [userPrompt, setUserPrompt] = useState<string[] | null>(null);
 
     const [isAnalyzing, setIsAnalyzing] = useState(true);
     const [textAnalysisDone, setTextAnalysisDone] = useState(true);
@@ -130,6 +130,7 @@ export default function Home() {
         setError('');
         setOutfitImage(null);
         setSelectedStyle(null);
+        
     }, [selectedFile]);
 
     // Text Analysis
@@ -203,13 +204,12 @@ export default function Home() {
             const formData = new FormData();
             formData.append('image', selectedFile);
             if(userPrompt) {
-                formData.append('user_prompt', userPrompt);
-                setUserPrompt('');
+                console.log(userPrompt)
+                formData.append('user_prompt', JSON.stringify(userPrompt));
             }
 
             try {
                 const { data } = await axios.post(`https://api.coloranalysis.fun/analyze/image`, formData);
-                console.log(data);
                 
                 const outfitImages: OutfitImages = {};
                 data.image.forEach((item: { style: string; image: string }) => {

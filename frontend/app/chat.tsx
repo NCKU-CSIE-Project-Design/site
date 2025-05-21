@@ -37,7 +37,7 @@ interface ChatWidgetProps {
     setLoading: (loading: boolean) => void;
     setIsAnalyzing: (isAnalyzing: boolean) => void;
     setImageAnalysisDone: (imageAnalysisDone: boolean) => void;
-    setUserPrompt: (userPrompt: string) => void;
+    setUserPrompt: (userPrompt: string[]) => void;
     isAnalyzing: boolean;
 }
 
@@ -119,9 +119,12 @@ export default function ChatWidget({
             ]);
             return;
         }
-
         if (chatmessage.trim()) {
-            setUserPrompt(chatmessage);
+            const userMessages = chatHistory
+                .filter((msg: { role: string; content: string }) => msg.role === 'user')
+                .map((msg: { content: string }) => msg.content);
+
+            setUserPrompt([chatmessage, ...userMessages]);
 
             setChatHistory((prevHistory) => [
                 ...prevHistory,

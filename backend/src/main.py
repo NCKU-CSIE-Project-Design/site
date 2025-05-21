@@ -8,7 +8,7 @@ import os
 from datetime import datetime
 from dotenv import load_dotenv
 from color import get_color
-from typing import Optional
+from typing import Optional, List
 import json
 
 import base64
@@ -81,14 +81,19 @@ async def analyze_text(
 @app.post("/analyze/image")
 async def analyze_image(
     image: UploadFile = File(...),
-    user_prompt:str = Form("")
+    user_prompt: Optional[str] = Form(None)
 ):
     try:
         contents = await image.read()
         face = base64.b64encode(contents).decode()
         img_pil = PIL.Image.open(io.BytesIO(contents))
         
-        outfit_prompt = get_outfit_prompt(img_pil, user_prompt)
+        if user_prompt:
+            user_prompt_list = json.loads(user_prompt)
+        else:
+            user_prompt_list = None
+
+        outfit_prompt = get_outfit_prompt(img_pil, user_prompt_list)
         print(outfit_prompt)
 
         outfit_image = await generate_image_from_flux(outfit_prompt) \
