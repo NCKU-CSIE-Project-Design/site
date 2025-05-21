@@ -4,7 +4,7 @@ import os
 genai.configure(api_key=os.getenv('GEMINI_API_KEY'))
 model = genai.GenerativeModel('gemini-1.5-flash')
 
-def get_analysis_result(colors, face):
+async def get_analysis_result(colors, face):
     analysis_prompt = f"""
     This is a personal color analysis of a person's photo:
     - Hair color: {colors['hair']}
@@ -20,8 +20,14 @@ def get_analysis_result(colors, face):
     Please respond in Traditional Chinese, avoid using Korean, and provide detailed explanations. Use Markdown.
     """
     
-    analysis_response = model.generate_content([analysis_prompt, face]).text
-    return analysis_response
+    response = await model.generate_content_async(
+        [analysis_prompt, face],
+        stream=True
+    )
+    
+    async for chunk in response:
+        if chunk.text:
+            yield chunk.text
 
 
 def get_gender(face):

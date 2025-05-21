@@ -18,8 +18,6 @@ import {
     textFieldStyles,
     sendButtonStyles
 } from '../styles/chat';
-import axios from 'axios';
-
 
 interface OutfitImages {
     [key: string]: string;
@@ -36,6 +34,11 @@ interface ChatWidgetProps {
     selectedFile: File | null;
     setResultMessage: (message: string) => void;
     setSelectedStyle: (selectedStyle: string | null) => void;
+    setLoading: (loading: boolean) => void;
+    setIsAnalyzing: (isAnalyzing: boolean) => void;
+    setImageAnalysisDone: (imageAnalysisDone: boolean) => void;
+    setUserPrompt: (userPrompt: string) => void;
+    isAnalyzing: boolean;
 }
 
 export default function ChatWidget({ 
@@ -43,7 +46,12 @@ export default function ChatWidget({
     setOutfitImage, 
     selectedFile,
     setResultMessage,
-    setSelectedStyle
+    setSelectedStyle,
+    setLoading,
+    setIsAnalyzing,
+    setImageAnalysisDone,
+    setUserPrompt,
+    isAnalyzing
 }: ChatWidgetProps) {
     const [open, setOpen] = useState<boolean>(false);
     const [chatmessage, setchatMessage] = useState<string>('');
@@ -75,6 +83,17 @@ export default function ChatWidget({
         };
     }, [chatHistory]);
 
+    useEffect(() => {
+        if (!isAnalyzing && chatHistory.length > 0 && 
+            chatHistory[chatHistory.length - 1].content.startsWith('Generating')) {
+            setChatHistory((prevHistory) => [
+                ...prevHistory,
+                { role: 'assistant', content: 'Generation complete' },
+            ]);
+            setResultMessage('Your personalized outfit is displayed on the left');
+        }
+    }, [isAnalyzing, chatHistory, setResultMessage]);
+
     const toggleChat = (): void => {
         setOpen(!open);
     };
@@ -92,7 +111,6 @@ export default function ChatWidget({
             ...prevHistory,
             { role: 'user', content: chatmessage },
         ]);
-        setchatMessage('');
 
         if (!selectedFile) {
             setChatHistory((prevHistory) => [
@@ -103,36 +121,24 @@ export default function ChatWidget({
         }
 
         if (chatmessage.trim()) {
-            const formData = new FormData();
-            formData.append("user_prompt", chatmessage);
-            if (selectedFile) {
-                formData.append("image", selectedFile);
-            }
+            setUserPrompt(chatmessage);
 
             setChatHistory((prevHistory) => [
                 ...prevHistory,
                 { role: 'assistant', content: `Generating${loadingDots}` },
             ]);
 
-            try {
-                const { data: imageAnalysisData } = await axios.post(`https://api.coloranalysis.fun/analyze/image`, formData);
-                console.log(imageAnalysisData)
-
-                const outfitImages: OutfitImages = {};
-                imageAnalysisData.image.forEach((item: { style: string; image: string }) => {
-                    outfitImages[item.style] = item.image;
-                });
-                setOutfitImage(outfitImages);
-                setSelectedStyle(imageAnalysisData.image[0].style); // choose the first one as default
-
-                setChatHistory((prevHistory) => [
-                    ...prevHistory,
-                    { role: 'assistant', content: 'Generation complete' },
-                ]);
-                setResultMessage('Your personalized outfit is displayed on the left');
-            } catch (error) {
-                console.error("Upload failed:", error);
-            }
+            setLoading(true);
+    
+            setError('');
+            setOutfitImage(null);
+            setSelectedStyle(null);
+    
+            // start analyzing
+            setIsAnalyzing(true);
+            setImageAnalysisDone(false);
+            
+            setchatMessage('');
         }
     };
 
@@ -196,3 +202,4 @@ export default function ChatWidget({
         </>
     );
 };
+

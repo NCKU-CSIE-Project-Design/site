@@ -35,6 +35,7 @@ export default function Home() {
     const [selectedStyle, setSelectedStyle] = useState<string | null>(null);
     const [message, setMessage] = useState<string>("Analysis results will be displayed here after uploading or taking a photo");
     const videoRef = useRef<HTMLVideoElement>(null);
+    const [userPrompt, setUserPrompt] = useState<string>('');
 
     const [isAnalyzing, setIsAnalyzing] = useState(true);
     const [textAnalysisDone, setTextAnalysisDone] = useState(true);
@@ -92,6 +93,7 @@ export default function Home() {
         }
     };
 
+        
     const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>): void => {
         const file = event.target.files?.[0];
         event.target.value = '';
@@ -120,57 +122,91 @@ export default function Home() {
         }
     };
 
-    const handleAnalyze = (): void => {
-        if (!selectedFile) return;
-        
-        // 重設所有狀態
-        setLoading(true);
+    useEffect(() => {
         setResult('');
-        setError('');
         setColors(null);
+        setCustomColors(null);
+        setColorsChanged(false);
+        setError('');
         setOutfitImage(null);
         setSelectedStyle(null);
-        
-        // 設置分析狀態為 true，觸發 useEffect
-        setIsAnalyzing(true);
-        setTextAnalysisDone(false);
-    };
-    
-    // 當 isAnalyzing 變為 true 時，執行文字分析
-    useEffect(() => {
+    }, [selectedFile]);
+
+    // Text Analysis
+    useEffect(() => { 
         const runTextAnalysis = async () => {
             if (!isAnalyzing || textAnalysisDone || !selectedFile) return;
             
             const formData = new FormData();
             formData.append('image', selectedFile);
+            if(customColors) {
+                formData.append('colors', JSON.stringify(customColors));
+                setCustomColors(null);
+                setColorsChanged(false);
+            }
             
             try {
-                const { data } = await axios.post(`https://api.coloranalysis.fun/analyze/text`, formData);
-                console.log(data);
-                
-                // 立即更新狀態和渲染
-                setResult(data.analysis);
-                setColors(data.colors);
+                // 使用 fetch 發送請求並處理串流
+                const response = await fetch(`https://api.coloranalysis.fun/analyze/text`, {
+                    method: 'POST',
+                    body: formData,
+                });
+
+                const reader = response.body?.getReader();
+                const decoder = new TextDecoder();
+                let accumulatedText = '';
+
+                if (!reader) {
+                    throw new Error('No reader available');
+                }
+
+                while (true) {
+                    const { done, value } = await reader.read();
+                    if (done) break;
+
+                    const chunk = decoder.decode(value);
+                    const lines = chunk.split('\n');
+
+                    for (const line of lines) {
+                        if (line.startsWith('data: ')) {
+                            try {
+                                const data = JSON.parse(line.slice(6));
+                                if (data.chunk) {
+                                    accumulatedText += data.chunk;
+                                    setResult(accumulatedText);
+                                }
+                                if (data.colors) {
+                                    setColors(data.colors);
+                                }
+                            } catch (e) {
+                                console.error('Error parsing SSE data:', e);
+                            }
+                        }
+                    }
+                }
             } catch (error) {
                 console.error(error);
                 setError(error instanceof Error ? error.message : 'Unknown Error');
-            } finally {
-                setTextAnalysisDone(true);
-                setImageAnalysisDone(false);
             }
+            setTextAnalysisDone(true);
+            setImageAnalysisDone(false);
         };
         
         runTextAnalysis();
     }, [isAnalyzing, textAnalysisDone, selectedFile]);
     
-    // 當 isAnalyzing 變為 true 時，執行圖像分析
+    // Image Analysis
     useEffect(() => {
         const runImageAnalysis = async () => {
             if (!isAnalyzing || imageAnalysisDone || !selectedFile) return;
             
             const formData = new FormData();
             formData.append('image', selectedFile);
-            
+            if(userPrompt) {
+                formData.append('user_prompt', userPrompt);
+                setUserPrompt('');
+            }
+
             try {
                 const { data } = await axios.post(`https://api.coloranalysis.fun/analyze/image`, formData);
                 console.log(data);
@@ -186,10 +222,8 @@ export default function Home() {
             } catch (error) {
                 console.error(error);
                 setError(error instanceof Error ? error.message : 'Unknown Error');
-            } finally {
-                setImageAnalysisDone(true);
-                setLoading(false);
             }
+            setImageAnalysisDone(true);
         };
         
         runImageAnalysis();
@@ -202,6 +236,26 @@ export default function Home() {
             setIsAnalyzing(false);
         }
     }, [textAnalysisDone, imageAnalysisDone]);
+
+    const handleAnalyze = (): void => {
+        if (!selectedFile) {
+            setError('Image file not found');
+            return;
+        }
+
+        setLoading(true);
+
+        setResult('');
+        setColors(null);
+        setColorsChanged(false);
+        setError('');
+        setOutfitImage(null);
+        setSelectedStyle(null);
+
+        // start analyzing
+        setIsAnalyzing(true);
+        setTextAnalysisDone(false);
+    };
 
     const handleColorChange = (part: string, newColor: string): void => {
         setCustomColors(prevColors => {
@@ -219,27 +273,6 @@ export default function Home() {
             setColorsChanged(true);
         }
     }, [customColors]);
-
-    const handleReanalyze = async (): Promise<void> => {
-        if (!selectedFile) {
-            setError('Image file not found');
-            return;
-        }
-
-        setLoading(true);
-        setResult('');
-        setError('');
-        setOutfitImage(null);
-        setSelectedStyle(null);
-        
-        const formData = new FormData();
-        formData.append('image', selectedFile);
-        formData.append('colors', JSON.stringify(customColors));
-        
-        
-        setIsAnalyzing(true);
-        setTextAnalysisDone(false);
-    };
 
     const resetUpload = (): void => {
         if (isCameraActive) {
@@ -512,7 +545,7 @@ export default function Home() {
                                         <Button
                                             variant="contained"
                                             fullWidth
-                                            onClick={handleReanalyze}
+                                            onClick={handleAnalyze}
                                             sx={{ mt: 2, textTransform: 'none' }}
                                         >
                                             Reanalyze
@@ -540,6 +573,11 @@ export default function Home() {
                     selectedFile={selectedFile} 
                     setResultMessage={setMessage}
                     setSelectedStyle={setSelectedStyle}
+                    setLoading={setLoading}
+                    setIsAnalyzing={setIsAnalyzing}
+                    setImageAnalysisDone={setImageAnalysisDone}
+                    setUserPrompt={setUserPrompt}
+                    isAnalyzing={isAnalyzing}
                 />
             </Box>
         </Container>

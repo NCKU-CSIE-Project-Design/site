@@ -1,5 +1,6 @@
 from fastapi import FastAPI, File, UploadFile, Form
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import StreamingResponse
 import google.generativeai as genai
 import PIL.Image
 import io
@@ -60,12 +61,17 @@ async def analyze_text(
             if colors.get("error"):
                 return { "error": colors.get("error") }
 
-        analysis_result = get_analysis_result(colors, img_pil)
-        
-        return {
-            "analysis": analysis_result,
-            "colors": colors
-        }
+        async def generate_stream():
+            yield f"data: {json.dumps({'colors': colors})}\n\n"
+            
+            async for chunk in get_analysis_result(colors, img_pil):
+                yield f"data: {json.dumps({'chunk': chunk})}\n\n"
+            
+
+        return StreamingResponse(
+            generate_stream(),
+            media_type="text/event-stream"
+        )
 
     except Exception as e:
         return {

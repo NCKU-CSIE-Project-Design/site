@@ -7,7 +7,7 @@ import os
 FLUX_API_ADDRESS = os.getenv('FLUX_API_ADDRESS')
 FLUX_OUTPUT_API_ADDRESS = os.getenv('FLUX_OUTPUT_API_ADDRESS')
 
-async def get_error_img():
+def get_error_img():
     with open("static/error.jpg", "rb") as image_file:
         image_data = image_file.read()
         base64_encoded_data = base64.b64encode(image_data)
@@ -15,6 +15,8 @@ async def get_error_img():
         return image
     
 async def generate_image_from_flux(prompt):
+    print("generating image from flux")
+
     results = []
     image = await prompt_to_image(prompt)
 
