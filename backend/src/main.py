@@ -17,7 +17,7 @@ from stable_diffusion import generate_image_from_sd, change_face_from_sd
 from flux import generate_image_from_flux
 
 load_dotenv()
-LoRA = ["nolora", "preppy-000003"]
+LoRA = ["cargopants3", "preppy-000003"]
 
 app = FastAPI()
 app.add_middleware(

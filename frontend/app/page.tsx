@@ -147,7 +147,6 @@ export default function Home() {
             }
             
             try {
-                // 使用 fetch 發送請求並處理串流
                 const response = await fetch(`https://api.coloranalysis.fun/analyze/text`, {
                     method: 'POST',
                     body: formData,
@@ -156,10 +155,22 @@ export default function Home() {
                 const reader = response.body?.getReader();
                 const decoder = new TextDecoder();
                 let accumulatedText = '';
+                let pendingText = '';
 
                 if (!reader) {
                     throw new Error('No reader available');
                 }
+
+                // Function to type out text character by character
+                const typeText = async (text: string) => {
+                    for (let i = 0; i < text.length; i++) {
+                        pendingText += text[i];
+                        setResult(accumulatedText + pendingText);
+                        await new Promise(resolve => setTimeout(resolve, 5)); // 20ms delay between characters
+                    }
+                    accumulatedText += pendingText;
+                    pendingText = '';
+                };
 
                 while (true) {
                     const { done, value } = await reader.read();
@@ -173,8 +184,7 @@ export default function Home() {
                             try {
                                 const data = JSON.parse(line.slice(6));
                                 if (data.chunk) {
-                                    accumulatedText += data.chunk;
-                                    setResult(accumulatedText);
+                                    await typeText(data.chunk);
                                 }
                                 if (data.colors) {
                                     setColors(data.colors);
