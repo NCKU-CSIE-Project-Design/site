@@ -1,5 +1,5 @@
 # Korean Personal Color Analytics
-
+[![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/NCKU-CSIE-Project-Design/site)
 A web application for analyzing personal colors using AI.
 
 ## Setup Instructions
