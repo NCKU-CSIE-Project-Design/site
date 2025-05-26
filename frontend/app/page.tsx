@@ -5,6 +5,7 @@ import { Container, Box, Typography, Button, CircularProgress, Paper, Stack} fro
 import CloudUploadIcon from '@mui/icons-material/CloudUpload';
 import CameraAltIcon from '@mui/icons-material/CameraAlt';
 import ColorizeIcon from '@mui/icons-material/Colorize';
+import HomeIcon from '@mui/icons-material/Home';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import axios from 'axios';
@@ -321,10 +322,25 @@ export default function Home() {
                 <Button
                     variant="outlined"
                     color="primary"
+                    size="large"
+                    startIcon={<HomeIcon sx={{ fontSize: '1.5rem' }} />}
                     onClick={() => router.push('/virtual-tryon')}
-                    sx={{ textTransform: 'none', mb: 2 }}
+                    sx={{ 
+                        textTransform: 'none', 
+                        mb: 3,
+                        fontSize: '1.2rem',
+                        px: 4,
+                        py: 1.5,
+                        boxShadow: 3,
+                        '&:hover': {
+                            transform: 'translateY(-2px)',
+                            boxShadow: 6,
+                            backgroundColor: 'secondary'
+                        },
+                        transition: 'all 0.2s ease-in-out'
+                    }}
                 >
-                    Virtual Fitting Room
+                    Enter Virtual Fitting Room
                 </Button>
             </Box>
 

@@ -19,8 +19,11 @@ def predict_virtual_tryon(body_path: str, garment_path: str, garment_type: str):
 		}
 		garment_type = garment_type_map[garment_type]
 
-		# client = Client(LEFFA_API_URL)
-		client = Client("franciszzj/Leffa")
+		try:
+			client = Client(LEFFA_API_URL)
+		except:
+			client = Client("franciszzj/Leffa")
+			
 		result = client.predict(
 				src_image_path=handle_file(body_path),
 				ref_image_path=handle_file(garment_path),
