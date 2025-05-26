@@ -160,7 +160,7 @@ export default function Home() {
                     const errorData = await response.json().catch(() => ({ detail: 'Unknown error occurred' }));
                     throw new Error(errorData.detail || `HTTP error! status: ${response.status}`);
                 }
-
+                
                 const reader = response.body?.getReader();
                 const decoder = new TextDecoder();
                 let accumulatedText = '';
@@ -206,7 +206,6 @@ export default function Home() {
                 }
                 setImageAnalysisDone(false);
             } catch (error) {
-                console.error(error);
                 setError(error instanceof Error ? error.message : 'Unknown Error');
             }
             setTextAnalysisDone(true);
@@ -229,7 +228,7 @@ export default function Home() {
 
             try {
                 const { data } = await axios.post(`https://api.coloranalysis.fun/analyze/image`, formData);
-                
+
                 const outfitImages: OutfitImages = {};
                 data.images.forEach((item: { style: string; image: string }) => {
                     outfitImages[item.style] = item.image;
@@ -239,7 +238,6 @@ export default function Home() {
                 setOutfitImage(outfitImages);
                 setSelectedStyle(data.images[0].style);
             } catch (error) {
-                console.error(error);
                 setError(error instanceof Error ? error.message : 'Unknown Error');
             }
             setImageAnalysisDone(true);

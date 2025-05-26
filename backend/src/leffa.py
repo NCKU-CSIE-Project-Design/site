@@ -23,19 +23,19 @@ def predict_virtual_tryon(body_path: str, garment_path: str, garment_type: str):
 			client = Client(LEFFA_API_URL)
 		except:
 			client = Client("franciszzj/Leffa")
-			
+		
 		result = client.predict(
-				src_image_path=handle_file(body_path),
-				ref_image_path=handle_file(garment_path),
-				ref_acceleration=True,
-				step=30,
-				scale=2.5,
-				seed=42,
-				vt_model_type="viton_hd" if garment_type == "upper_body" else "dress_code",
-				vt_garment_type=garment_type,
-				vt_repaint=False,
-				api_name="/leffa_predict_vt"
-			)
+			src_image_path=handle_file(body_path),
+			ref_image_path=handle_file(garment_path),
+			ref_acceleration=True,
+			step=30,
+			scale=2.5,
+			seed=42,
+			vt_model_type="viton_hd" if garment_type == "upper_body" else "dress_code",
+			vt_garment_type=garment_type,
+			vt_repaint=False,
+			api_name="/leffa_predict_vt"
+		)
 		print(result)
 
 		with open(result[0], "rb") as image_file:
@@ -45,4 +45,5 @@ def predict_virtual_tryon(body_path: str, garment_path: str, garment_type: str):
 	
 	except Exception as e:
 		print(f"[leffa predict_virtual_tryon] {str(e)}")
-		return get_error_img()
+		raise Exception("Fail during predicting. Please check file upload type and style.")
+		

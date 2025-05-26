@@ -1,8 +1,8 @@
 import React from 'react';
 import type { Metadata } from "next";
 import ClientLayout from './components/ClientLayout';
-// import { GoogleTagManager } from '@next/third-parties/google';
-// import MicrosoftClarity from './components/MicrosoftClarity';
+import { GoogleTagManager } from '@next/third-parties/google';
+import MicrosoftClarity from './components/MicrosoftClarity';
 import { Geist, Geist_Mono } from "next/font/google";
 
 
@@ -45,8 +45,8 @@ const themeConfig = {
 export default function RootLayout({children,}: Readonly<{ children: React.ReactNode; }>) {
   return (
     <html lang="en">
-      {/* <GoogleTagManager gtmId="GTM-PRLL7MHX" />
-      <MicrosoftClarity clarityId="rgbmrq1m4h" /> */}
+      <GoogleTagManager gtmId="GTM-PRLL7MHX" />
+      <MicrosoftClarity clarityId="rgbmrq1m4h" />
 
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
         <ClientLayout themeConfig={themeConfig}>{children}</ClientLayout>

@@ -96,14 +96,10 @@ export default function VirtualTryOn() {
             });
 
             const data = await response.json();
-            
-            if (data.error) {
-                throw new Error(data.error);
-            }
+            if (!response.ok) throw new Error(`${data.detail}`);
 
             setResultPreview(`data:image/png;base64,${data.result}`);
         } catch (error) {
-            console.error(error);
             setError(error instanceof Error ? error.message : 'Unknown Error');
         } finally {
             setLoading(false);

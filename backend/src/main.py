@@ -95,8 +95,8 @@ async def analyze_image(
         
         print(outfit_prompt)
 
-        outfit_image = await generate_image_from_flux(outfit_prompt) \
-                     + await generate_image_from_sd(outfit_prompt, LoRA)
+        outfit_image =  await generate_image_from_flux(outfit_prompt)
+        outfit_image += await generate_image_from_sd(outfit_prompt, LoRA)
         
         outfit_image_changed_face = await change_face_from_sd(outfit_image, face_base64)
         
@@ -122,15 +122,9 @@ async def virtual_tryon(
         garment_image_contents = await garment_image.read()
         garment_path = save_image(garment_image_contents)
         
-        import time
-        start_time = time.time()
         result = predict_virtual_tryon(body_path, garment_path, garment_type)
-        end_time = time.time()
-        print(f"Virtual try-on took {end_time - start_time:.2f} seconds")
         
-        return {
-            "result": result
-        }
+        return {"result": result}
 
     except Exception as e:
         error = f"Error: {str(e)}"
