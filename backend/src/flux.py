@@ -29,7 +29,8 @@ async def generate_image_from_flux(prompt):
         "style": "Recommend",
         "image": image
     })
-
+    
+    clean_gpu()
     return results
 
 
@@ -76,3 +77,11 @@ async def prompt_to_image(prompt):
     except Exception as e:
         print(f"[flux prompt_to_image] {str(e)}")
         return None
+    
+def clean_gpu():
+    try:
+        response = requests.post('http://140.116.154.71:7862/api/easyuse/cleangpu')
+        response.raise_for_status()
+        print("✅ VRAM released successfully")
+    except Exception as e:
+        print(f"[flux release_vram] {str(e)}")
