@@ -11,6 +11,7 @@ import axios from 'axios';
 import { UploadBox, HiddenInput, PreviewImage, MarkdownContainer, ColorDisplay} from '../styles/App';
 import ChatWidget from './chat';
 import Image from 'next/image';
+import { useRouter } from 'next/navigation';
 
 
 interface Colors {
@@ -40,6 +41,8 @@ export default function Home() {
     const [isAnalyzing, setIsAnalyzing] = useState(true);
     const [textAnalysisDone, setTextAnalysisDone] = useState(true);
     const [imageAnalysisDone, setImageAnalysisDone] = useState(true);
+
+    const router = useRouter();
 
     const startCamera = async (): Promise<void> => {
         try {
@@ -139,7 +142,7 @@ export default function Home() {
             if (!isAnalyzing || textAnalysisDone || !selectedFile) return;
             
             const formData = new FormData();
-            formData.append('image', selectedFile);
+            formData.append('face_image', selectedFile);
             if(customColors) {
                 formData.append('colors', JSON.stringify(customColors));
                 setCustomColors(null);
@@ -151,6 +154,11 @@ export default function Home() {
                     method: 'POST',
                     body: formData,
                 });
+
+                if (!response.ok) {
+                    const errorData = await response.json().catch(() => ({ detail: 'Unknown error occurred' }));
+                    throw new Error(errorData.detail || `HTTP error! status: ${response.status}`);
+                }
 
                 const reader = response.body?.getReader();
                 const decoder = new TextDecoder();
@@ -195,12 +203,12 @@ export default function Home() {
                         }
                     }
                 }
+                setImageAnalysisDone(false);
             } catch (error) {
                 console.error(error);
                 setError(error instanceof Error ? error.message : 'Unknown Error');
             }
             setTextAnalysisDone(true);
-            setImageAnalysisDone(false);
         };
         
         runTextAnalysis();
@@ -212,7 +220,7 @@ export default function Home() {
             if (!isAnalyzing || imageAnalysisDone || !selectedFile) return;
             
             const formData = new FormData();
-            formData.append('image', selectedFile);
+            formData.append('face_image', selectedFile);
             if(userPrompt) {
                 console.log(userPrompt)
                 formData.append('user_prompt', JSON.stringify(userPrompt));
@@ -222,13 +230,13 @@ export default function Home() {
                 const { data } = await axios.post(`https://api.coloranalysis.fun/analyze/image`, formData);
                 
                 const outfitImages: OutfitImages = {};
-                data.image.forEach((item: { style: string; image: string }) => {
+                data.images.forEach((item: { style: string; image: string }) => {
                     outfitImages[item.style] = item.image;
                 });
                 
                 // 立即更新狀態和渲染
                 setOutfitImage(outfitImages);
-                setSelectedStyle(data.image[0].style);
+                setSelectedStyle(data.images[0].style);
             } catch (error) {
                 console.error(error);
                 setError(error instanceof Error ? error.message : 'Unknown Error');
@@ -302,7 +310,7 @@ export default function Home() {
     };
 
     return (
-        <Container maxWidth="lg">
+        <Container maxWidth="lg" sx={{ mb: 4 }}>
             <Box sx={{ my: 4, textAlign: 'center' }}>
                 <Typography variant="h3" component="h1" color="primary" gutterBottom>
                     Korean Personal Color Analytics
@@ -310,6 +318,14 @@ export default function Home() {
                 <Typography variant="h6" color="text.secondary" paragraph>
                     Upload your photo or take a picture, and let AI create personalized color recommendations for you
                 </Typography>
+                <Button
+                    variant="outlined"
+                    color="primary"
+                    onClick={() => router.push('/virtual-tryon')}
+                    sx={{ textTransform: 'none', mb: 2 }}
+                >
+                    Virtual Fitting Room
+                </Button>
             </Box>
 
             <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 3 }}>

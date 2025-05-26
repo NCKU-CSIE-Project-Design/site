@@ -3,6 +3,7 @@ import json
 import time
 import base64
 import os
+import re
 
 FLUX_API_ADDRESS = os.getenv('FLUX_API_ADDRESS')
 FLUX_OUTPUT_API_ADDRESS = os.getenv('FLUX_OUTPUT_API_ADDRESS')
@@ -22,7 +23,7 @@ async def generate_image_from_flux(prompt):
 
     if image == None:
         image = get_error_img()
-        print("error on prompt_to_image()")
+        print("error on flux prompt_to_image()")
 
     results.append({
         "style": "Recommend",
@@ -40,7 +41,9 @@ async def prompt_to_image(prompt):
         workflow["28"]["inputs"]["string"] = prompt
 
         res = requests.post(f"{FLUX_API_ADDRESS}/prompt", json={"prompt": workflow})
+        res.raise_for_status()
         res_data = res.json()
+
         prompt_id = res_data["prompt_id"]
 
         print(f"🟡 Task submitted, Prompt ID: {prompt_id}")
@@ -53,7 +56,7 @@ async def prompt_to_image(prompt):
             time.sleep(1)
 
         image_list = requests.get(FLUX_OUTPUT_API_ADDRESS).text
-        import re
+        
         matches = re.findall(r'href="([^"]+\.png)"', image_list)
         if not matches:
             print("⚠️ Image not found.")
@@ -64,10 +67,6 @@ async def prompt_to_image(prompt):
         print(f"🖼️ Image found: {image_url}")
 
         res = requests.get(image_url)
-        if res.status_code != 200:
-            print("⚠️ Failed to download image")
-            return None
-            
         image_data = res.content
         base64_encoded_data = base64.b64encode(image_data)
         base64_image = base64_encoded_data.decode('utf-8')
@@ -75,5 +74,5 @@ async def prompt_to_image(prompt):
         return base64_image
     
     except Exception as e:
-        print(f"Error occurred during request or decoding: {str(e)}")
+        print(f"[flux prompt_to_image] {str(e)}")
         return None

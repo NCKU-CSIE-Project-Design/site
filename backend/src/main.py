@@ -1,4 +1,4 @@
-from fastapi import FastAPI, File, UploadFile, Form
+from fastapi import FastAPI, File, UploadFile, Form, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
 import google.generativeai as genai
@@ -10,14 +10,14 @@ from dotenv import load_dotenv
 from color import get_color
 from typing import Optional, List
 import json
-
 import base64
-from gemini import *
+from gemini import get_analysis_result, get_outfit_prompt
 from stable_diffusion import generate_image_from_sd, change_face_from_sd
 from flux import generate_image_from_flux
+from leffa import predict_virtual_tryon
 
 load_dotenv()
-LoRA = ["cargopants3", "preppy-000003"]
+LoRA = ["nolora", "cargopants3", "preppy-000003"]
 
 app = FastAPI()
 app.add_middleware(
@@ -33,7 +33,7 @@ if not os.path.exists(UPLOAD_DIR):
     os.makedirs(UPLOAD_DIR)
 
 def save_image(contents):
-    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S_%f")
     filename = f"{timestamp}.jpg"
     filepath = os.path.join(UPLOAD_DIR, filename)
 
@@ -44,27 +44,25 @@ def save_image(contents):
     
 @app.post("/analyze/text")
 async def analyze_text(
-    image: UploadFile = File(...),
+    face_image: UploadFile = File(...),
     colors: Optional[str] = Form(None)
 ):
     try:
-        contents = await image.read()
-        filepath = save_image(contents)
-        
-        face = base64.b64encode(contents).decode()
-        img_pil = PIL.Image.open(io.BytesIO(contents))
-        
+        face_image_contents = await face_image.read()
+        face_path = save_image(face_image_contents)
+        face = PIL.Image.open(io.BytesIO(face_image_contents))
+
         if colors:
             colors = json.loads(colors)
         else:
-            colors = get_color(filepath)
+            colors = get_color(face_path)
             if colors.get("error"):
-                return { "error": colors.get("error") }
+                raise HTTPException(status_code=500, detail=colors.get("error"))
 
         async def generate_stream():
             yield f"data: {json.dumps({'colors': colors})}\n\n"
             
-            async for chunk in get_analysis_result(colors, img_pil):
+            async for chunk in get_analysis_result(colors, face):
                 yield f"data: {json.dumps({'chunk': chunk})}\n\n"
             
 
@@ -74,41 +72,70 @@ async def analyze_text(
         )
 
     except Exception as e:
-        return {
-            "error": f"Error: {str(e)}"
-        }
+        error = f"Error: {str(e)}"
+        print(error)
+        raise HTTPException(status_code=500, detail=error)
 
 @app.post("/analyze/image")
 async def analyze_image(
-    image: UploadFile = File(...),
+    face_image: UploadFile = File(...),
     user_prompt: Optional[str] = Form(None)
 ):
     try:
-        contents = await image.read()
-        face = base64.b64encode(contents).decode()
-        img_pil = PIL.Image.open(io.BytesIO(contents))
-        
+        face_image_contents = await face_image.read()
+        face = PIL.Image.open(io.BytesIO(face_image_contents))
+        face_base64 = base64.b64encode(face_image_contents).decode()
+
         if user_prompt:
             user_prompt_list = json.loads(user_prompt)
         else:
             user_prompt_list = None
 
-        outfit_prompt = get_outfit_prompt(img_pil, user_prompt_list)
+        outfit_prompt = get_outfit_prompt(face, user_prompt_list)
+        
         print(outfit_prompt)
 
         outfit_image = await generate_image_from_flux(outfit_prompt) \
                      + await generate_image_from_sd(outfit_prompt, LoRA)
         
-        outfit_image_changed_face = await change_face_from_sd(outfit_image, face)
+        outfit_image_changed_face = await change_face_from_sd(outfit_image, face_base64)
         
         return {
-            "image": outfit_image_changed_face
+            "images": outfit_image_changed_face
         }
 
     except Exception as e:
+        error = f"Error: {str(e)}"
+        print(error)
+        raise HTTPException(status_code=500, detail=error)
+
+@app.post("/virtual-tryon")
+async def virtual_tryon(
+    body_image: UploadFile = File(...),
+    garment_image: UploadFile = File(...),
+    garment_type: str = Form(...)
+):
+    try:
+        body_image_contents = await body_image.read()
+        body_path = save_image(body_image_contents)
+
+        garment_image_contents = await garment_image.read()
+        garment_path = save_image(garment_image_contents)
+        
+        import time
+        start_time = time.time()
+        result = predict_virtual_tryon(body_path, garment_path, garment_type)
+        end_time = time.time()
+        print(f"Virtual try-on took {end_time - start_time:.2f} seconds")
+        
         return {
-            "error": f"Error: {str(e)}"
+            "result": result
         }
+
+    except Exception as e:
+        error = f"Error: {str(e)}"
+        print(error)
+        raise HTTPException(status_code=500, detail=error)
     
 if __name__ == "__main__":
     import uvicorn

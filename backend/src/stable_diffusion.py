@@ -1,4 +1,4 @@
-import requests, base64, json, os
+import requests, base64, json, os, io
 
 SD_API_ADDRESS = os.getenv('SD_API_ADDRESS')
 
@@ -18,16 +18,21 @@ async def generate_image_from_sd(prompt, LoRA):
         else:
             image = await prompt_to_image(prompt + f", {lora}, <lora:{lora}:1>")
 
-        if image == None:
-            image = get_error_img()
-            print("error on prompt_to_image()")
-
         results.append({
             "style": f"{lora} style",
             "image": image
         })
     return results
 
+async def change_face_from_sd(images, face):
+    print("changing face")
+
+    for image in images:
+        image_changed_face = await change_face(image["image"], face)
+        
+        image["image"] = image_changed_face
+    
+    return images
     
 async def prompt_to_image(prompt):
     try:
@@ -39,28 +44,16 @@ async def prompt_to_image(prompt):
         payload["prompt"] = prompt
         
         response = requests.post(URL, json=payload, headers={'Content-Type': 'application/json'})
-        if response.status_code != 200:
-            return {"error": f"prompt_to_image request failed, status code: {response.status_code}", "details": response}
+        response.raise_for_status()
+
         data = response.json()
         image = data["images"][0]
 
         return image
     except Exception as e:
-        print(f"Error occurred during request or decoding: {str(e)}")
-        return None
+        print(f"[sd prompt_to_image] {str(e)}")
+        return get_error_img()
 
-
-async def change_face_from_sd(images, face):
-    for image in images:
-        image_changed_face = await change_face(image["image"], face)
-
-        if image_changed_face == None:
-            image_changed_face = await get_error_img()
-            print("error on change_face()")
-        
-        image["image"] = image_changed_face
-    
-    return images
 
 async def change_face(image, face):
     try:
@@ -73,15 +66,13 @@ async def change_face(image, face):
         payload["target_image"] = image
 
         response = requests.post(URL, json=payload, headers={'Content-Type': 'application/json'})
-        if response.status_code != 200:
-            print(f"change_face request failed, status code: {response.status_code}, details: {response}")
-            return None
+        response.raise_for_status()
+
         data = response.json()
-        
         image = data["image"]
 
         return image
     except Exception as e:
-        print(f"Error occurred during request or decoding: {str(e)}")
-        return None
+        print(f"[sd change_face] {str(e)}")
+        return get_error_img()
     
