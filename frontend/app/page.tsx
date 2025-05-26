@@ -44,6 +44,127 @@ export default function Home() {
     const [imageAnalysisDone, setImageAnalysisDone] = useState(true);
 
     const router = useRouter();
+    
+    // Text Analysis
+    useEffect(() => { 
+        const runTextAnalysis = async () => {
+            if (!isAnalyzing || textAnalysisDone || !selectedFile) return;
+            
+            const formData = new FormData();
+            formData.append('face_image', selectedFile);
+            if(customColors) {
+                formData.append('colors', JSON.stringify(customColors));
+                setCustomColors(null);
+                setColorsChanged(false);
+            }
+            
+            try {
+                const response = await fetch(`https://api.coloranalysis.fun/analyze/text`, {
+                    method: 'POST',
+                    body: formData,
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.json().catch(() => ({ detail: 'Unknown error occurred' }));
+                    throw new Error(errorData.detail || `HTTP error! status: ${response.status}`);
+                }
+
+                const reader = response.body?.getReader();
+                const decoder = new TextDecoder();
+                let accumulatedText = '';
+                let pendingText = '';
+
+                if (!reader) {
+                    throw new Error('No reader available');
+                }
+
+                // Function to type out text character by character
+                const typeText = async (text: string) => {
+                    for (let i = 0; i < text.length; i++) {
+                        pendingText += text[i];
+                        setResult(accumulatedText + pendingText);
+                        await new Promise(resolve => setTimeout(resolve, 5)); // 20ms delay between characters
+                    }
+                    accumulatedText += pendingText;
+                    pendingText = '';
+                };
+
+                while (true) {
+                    const { done, value } = await reader.read();
+                    if (done) break;
+
+                    const chunk = decoder.decode(value);
+                    const lines = chunk.split('\n');
+
+                    for (const line of lines) {
+                        if (line.startsWith('data: ')) {
+                            try {
+                                const data = JSON.parse(line.slice(6));
+                                if (data.chunk) {
+                                    await typeText(data.chunk);
+                                }
+                                if (data.colors) {
+                                    setColors(data.colors);
+                                }
+                            } catch (e) {
+                                console.error('Error parsing SSE data:', e);
+                            }
+                        }
+                    }
+                }
+                setImageAnalysisDone(false);
+            } catch (error) {
+                setError(error instanceof Error ? error.message : 'Unknown Error');
+            }
+            setTextAnalysisDone(true);
+        };
+        
+        runTextAnalysis();
+    }, [textAnalysisDone]);
+    
+    // Image Analysis
+    useEffect(() => {
+        const runImageAnalysis = async () => {
+            if (!isAnalyzing || imageAnalysisDone || !selectedFile) return;
+            
+            const formData = new FormData();
+            formData.append('face_image', selectedFile);
+            if(userPrompt) {
+                console.log(userPrompt)
+                formData.append('user_prompt', JSON.stringify(userPrompt));
+            }
+
+            try {
+                const { data } = await axios.post(`https://api.coloranalysis.fun/analyze/image`, formData);
+
+                const outfitImages: OutfitImages = {};
+                data.images.forEach((item: { style: string; image: string }) => {
+                    outfitImages[item.style] = item.image;
+                });
+                
+                // 立即更新狀態和渲染
+                setOutfitImage(outfitImages);
+                setSelectedStyle(data.images[0].style);
+            } catch (error) {
+                setError(error instanceof Error ? error.message : 'Unknown Error');
+            }
+            setImageAnalysisDone(true);
+            setLoading(false);
+            setIsAnalyzing(false);
+        };
+        
+        runImageAnalysis();
+    }, [imageAnalysisDone]);
+
+    useEffect(() => {
+        setResult('');
+        setColors(null);
+        setCustomColors(null);
+        setColorsChanged(false);
+        setError('');
+        setOutfitImage(null);
+        setSelectedStyle(null);
+    }, [selectedFile]);
 
     const startCamera = async (): Promise<void> => {
         try {
@@ -126,133 +247,6 @@ export default function Home() {
         }
     };
 
-    useEffect(() => {
-        setResult('');
-        setColors(null);
-        setCustomColors(null);
-        setColorsChanged(false);
-        setError('');
-        setOutfitImage(null);
-        setSelectedStyle(null);
-        
-    }, [selectedFile]);
-
-    // Text Analysis
-    useEffect(() => { 
-        const runTextAnalysis = async () => {
-            if (!isAnalyzing || textAnalysisDone || !selectedFile) return;
-            
-            const formData = new FormData();
-            formData.append('face_image', selectedFile);
-            if(customColors) {
-                formData.append('colors', JSON.stringify(customColors));
-                setCustomColors(null);
-                setColorsChanged(false);
-            }
-            
-            try {
-                const response = await fetch(`https://api.coloranalysis.fun/analyze/text`, {
-                    method: 'POST',
-                    body: formData,
-                });
-
-                if (!response.ok) {
-                    const errorData = await response.json().catch(() => ({ detail: 'Unknown error occurred' }));
-                    throw new Error(errorData.detail || `HTTP error! status: ${response.status}`);
-                }
-                
-                const reader = response.body?.getReader();
-                const decoder = new TextDecoder();
-                let accumulatedText = '';
-                let pendingText = '';
-
-                if (!reader) {
-                    throw new Error('No reader available');
-                }
-
-                // Function to type out text character by character
-                const typeText = async (text: string) => {
-                    for (let i = 0; i < text.length; i++) {
-                        pendingText += text[i];
-                        setResult(accumulatedText + pendingText);
-                        await new Promise(resolve => setTimeout(resolve, 5)); // 20ms delay between characters
-                    }
-                    accumulatedText += pendingText;
-                    pendingText = '';
-                };
-
-                while (true) {
-                    const { done, value } = await reader.read();
-                    if (done) break;
-
-                    const chunk = decoder.decode(value);
-                    const lines = chunk.split('\n');
-
-                    for (const line of lines) {
-                        if (line.startsWith('data: ')) {
-                            try {
-                                const data = JSON.parse(line.slice(6));
-                                if (data.chunk) {
-                                    await typeText(data.chunk);
-                                }
-                                if (data.colors) {
-                                    setColors(data.colors);
-                                }
-                            } catch (e) {
-                                console.error('Error parsing SSE data:', e);
-                            }
-                        }
-                    }
-                }
-                setImageAnalysisDone(false);
-            } catch (error) {
-                setError(error instanceof Error ? error.message : 'Unknown Error');
-            }
-            setTextAnalysisDone(true);
-        };
-        
-        runTextAnalysis();
-    }, [isAnalyzing, textAnalysisDone, selectedFile]);
-    
-    // Image Analysis
-    useEffect(() => {
-        const runImageAnalysis = async () => {
-            if (!isAnalyzing || imageAnalysisDone || !selectedFile) return;
-            
-            const formData = new FormData();
-            formData.append('face_image', selectedFile);
-            if(userPrompt) {
-                console.log(userPrompt)
-                formData.append('user_prompt', JSON.stringify(userPrompt));
-            }
-
-            try {
-                const { data } = await axios.post(`https://api.coloranalysis.fun/analyze/image`, formData);
-
-                const outfitImages: OutfitImages = {};
-                data.images.forEach((item: { style: string; image: string }) => {
-                    outfitImages[item.style] = item.image;
-                });
-                
-                // 立即更新狀態和渲染
-                setOutfitImage(outfitImages);
-                setSelectedStyle(data.images[0].style);
-            } catch (error) {
-                setError(error instanceof Error ? error.message : 'Unknown Error');
-            }
-            setImageAnalysisDone(true);
-        };
-        
-        runImageAnalysis();
-    }, [isAnalyzing, imageAnalysisDone, selectedFile]);
-    
-    // 當兩個分析都完成時，結束加載狀態
-    useEffect(() => {
-        if (textAnalysisDone && imageAnalysisDone) {
-            setLoading(false);
-            setIsAnalyzing(false);
-        }
-    }, [textAnalysisDone, imageAnalysisDone]);
 
     const handleAnalyze = (): void => {
         if (!selectedFile) {
